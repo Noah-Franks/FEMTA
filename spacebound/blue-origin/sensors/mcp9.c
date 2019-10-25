@@ -64,7 +64,7 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
   }
   else {
     upper = upper & 0x0F;  // Mask last 4 bits
-    temp = upper << 4 + lower >> 4;    // Get ambient temp. (+)
+    temp = (upper << 4) + (lower >> 4);    // Get ambient temp. (+)
     temp += (lower & 0x0F) * 0.0625f;  // Get decimal value
   }
 
