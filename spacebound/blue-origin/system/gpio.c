@@ -71,5 +71,5 @@ void fire(Charge * charge, bool hot) {
   }
   
   pins[charge -> gpio].ms_until_pulse_completes = charge -> delay;
-  pins[charge -> gpio].pulse_final_state = !hot;
+  pins[charge -> gpio].pulse_final_state = hot;
 }

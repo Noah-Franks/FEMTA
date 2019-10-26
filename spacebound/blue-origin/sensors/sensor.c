@@ -271,9 +271,12 @@ void sensor_call_free(void * vsensor) {
   if      (sensor -> bus == I2C_BUS) i2c_close(sensor -> i2c);
   else if (sensor -> bus == ONE_BUS) one_close(sensor -> one);    
   
-  hashmap_destroy(sensor -> targets);
+  //hashmap_destroy(sensor -> targets);
   
   for (int stream = 0; stream < sensor -> data_streams; stream++) {
+    
+    if (!sensor -> outputs[stream].series) continue;
+    
     list_destroy(sensor -> outputs[stream].series);
     list_destroy(sensor -> outputs[stream].triggers);
     free(sensor -> outputs[stream].unit);
