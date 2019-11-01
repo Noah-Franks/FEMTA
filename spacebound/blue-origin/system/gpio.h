@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+#include "../sensors/sensor.h"
+
 typedef struct Charge {
   
   char gpio;     // the broadcom number of the pin

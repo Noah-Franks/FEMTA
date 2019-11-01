@@ -9,6 +9,7 @@
 #include "hashmap.h"
 
 #include "../system/error.h"
+#include "../types/types.h"
 
 Hashmap * hashmap_create(hash_function hash, key_comparator key_diff, element_freer freer, int expected_size) {
   // Creates a hashmap with starting size as a function of expectations
@@ -42,13 +43,13 @@ int hash_string(void * string, int upper_bound) {
   // Hashes a string into a range using java's algorithm
   // h(x) has been chosen to minimize collisions
   // Note, hx will overflow but this is no problem
-
+  
   int hx = 0;
   for (int i = 0; i < strlen((char *) string); i++) {
     hx = hx * 31 + ((char *) string)[i];
   }
   
-  return abs(hx) % upper_bound;
+  return (int) ((u32) abs(hx) % (u32) upper_bound);    // abs can be negative
 }
 
 

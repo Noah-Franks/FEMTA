@@ -13,6 +13,7 @@
 #include "color.h"
 #include "i2c.h"
 
+#include "../.origin/origin.h"
 #include "../sensors/sensor.h"
 #include "../structures/list.h"
 #include "../system/gpio.h"
@@ -69,7 +70,12 @@ bool i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   // reads up to 32 bytes from an i2c device
   
   if (i2cReadI2CBlockData(dev -> handle, reg, buf, n) < 0) {
-    printf(RED "Could not read bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    if (console_error_messages)
+      printf(RED "Could not read bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    fprintf(schedule -> i2c_error_log, "%f%s\tread\t0x%u\t%d\n", time_passed(), time_unit, reg, n);
+    
     return false;
   }
   return true;
@@ -79,7 +85,12 @@ bool i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {
   // reads up to 32 bytes from an i2c device, without asking for a particular register
   
   if (i2cReadDevice(dev -> handle, buf, n)) {
-    printf(RED "Could not read raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    if (console_error_messages)
+      printf(RED "Could not read raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    fprintf(schedule -> i2c_error_log, "%f%s\tread\t----\t%d\n", time_passed(), time_unit, n);
+    
     return false;
   }
   return true;
@@ -89,7 +100,12 @@ bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n) {
   // writes up to 32 bytes from an i2c device, without specifying a particular register
   
   if (i2cWriteDevice(dev -> handle, buf, n)) {
-    printf(RED "Could not write raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    if (console_error_messages)
+      printf(RED "Could not write raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    fprintf(schedule -> i2c_error_log, "%f%s\twrite\t----\t%d\n", time_passed(), time_unit, n);
+    
     return false;
   }
   return true;
@@ -99,7 +115,12 @@ bool i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
   // writes a byte to the i2c device
   
   if (i2cWriteByteData(dev -> handle, reg, value) < 0) {
-    printf(RED "Could not write byte to " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    if (console_error_messages)
+      printf(RED "Could not write byte to " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    fprintf(schedule -> i2c_error_log, "%f%s\twrite\t0x%u\t1\n", time_passed(), time_unit, reg);
+    
     return false;
   }
   return true;
@@ -109,7 +130,12 @@ bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   // writes up to 32 bytes to the i2c device
   
   if (i2cWriteI2CBlockData(dev -> handle, reg, buf, n)) {
-    printf(RED "Could not write bytes to " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    if (console_error_messages)
+      printf(RED "Could not write bytes to " YELLOW "%s\n" RESET, dev -> sensor -> name);
+    
+    fprintf(schedule -> i2c_error_log, "%f%s\twrite\t0x%u\t%d\n", time_passed(), time_unit, reg, n);
+    
     return false;
   }
   return true;
@@ -118,7 +144,8 @@ bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
 
 void i2c_close(i2c_device * i2c) {
   // closes and frees the i2c device
-  
+  fclose(schedule -> i2c_error_log);
+  fclose(schedule -> control_log);    // change if not i2c-bound
   fclose(i2c -> log);
   i2cClose(i2c -> handle);
   free(i2c);
@@ -129,10 +156,16 @@ void init_i2c() {
   
   schedule -> i2c_devices = list_create();
   schedule -> i2c_thread  = malloc(sizeof(*schedule -> i2c_thread));
-  
+    
   // prepare handle array
   for (int i = 0; i < 0x7F; i++)
     handles[i] = -1;
+  
+  schedule -> i2c_error_log = fopen("./logs/errors-i2c.log", "a");
+  schedule -> control_log = fopen("./logs/control.log", "a");
+  
+  fprintf(schedule -> control_log, GRAY "Time\tEvent\tInstance\tValue\n" RESET);
+  fprintf(schedule -> i2c_error_log, RED "Time\tType\t\tRegister\tBytes\n" RESET);
 }
 
 void start_i2c() {

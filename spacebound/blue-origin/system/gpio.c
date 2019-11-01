@@ -42,7 +42,11 @@ void pin_set(char broadcom, bool hot) {
   printf(YELLOW "DEBUG: %d set %d\n" RESET, broadcom, hot);
   if (pins[broadcom].hot != hot) {
     pins[broadcom].hot = hot;
-    gpioWrite(broadcom, (int) hot);    
+    gpioWrite(broadcom, (int) hot);
+    
+    if (hot) fprintf(schedule -> control_log, "%f%s\twire\t%d\thot\n", time_passed(), time_unit, broadcom);
+    else     fprintf(schedule -> control_log, "%f%s\twire\t%d\tcold\n", time_passed(), time_unit, broadcom);
+    
   }
 }
 
@@ -50,7 +54,11 @@ void pin_set_hot(void * nil, char * vbroadcom) {
   
   char broadcom = atoi((char *) vbroadcom + 1);
   
-  printf("Set %d hot\n", broadcom);
+  float event_time = time_passed();
+  
+  printf("%f%s     set %d hot\n" , event_time, time_unit, broadcom);
+  fprintf(schedule -> control_log, "%f%s\twire\t%d\thot\n", event_time, time_unit, broadcom);
+  
   pin_set(broadcom, true);
 }
 
@@ -58,13 +66,19 @@ void pin_set_cold(void * nil, char * vbroadcom) {
   
   char broadcom = atoi((char *) vbroadcom + 1);
   
-  printf("Set %d cold\n", broadcom);
+  float event_time = time_passed();
+  
+  printf("%f%s     set %d cold\n" , event_time, time_unit, broadcom);
+  fprintf(schedule -> control_log, "%f%s\twire\t%d\tcold\n", event_time, time_unit, broadcom);
+  
   pin_set(broadcom, false);
 }
 
 void fire(Charge * charge, bool hot) {
   // fires a charge, setting up any pulsing
-
+  
+  printf("Fired charge %d %d\n", charge -> gpio, hot);
+  
   if (!charge -> delay) {
     pin_set(charge -> gpio, hot);
     return;

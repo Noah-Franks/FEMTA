@@ -6,6 +6,7 @@
 #include "color.h"
 #include "state.h"
 
+#include "../sensors/sensor.h"
 #include "../structures/hashmap.h"
 
 static Hashmap * states;    // maps string names to bools
@@ -32,13 +33,23 @@ bool state_exists(char * state) {
 }
 
 void enter_state(char * state) {
-  printf(CYAN "DEBUG: entered %s\n" RESET, state);
+  
+  float event_time = time_passed();
+  
+  printf(CYAN "%f%s    ntered %s\n" RESET, event_time, time_unit, state);
   hashmap_update(states, state, (void *) true);
+  
+  fprintf(schedule -> control_log, "%f%s\tstate\t%s\tenter\n", event_time, time_unit, state);
 }
 
 void leave_state(char * state) {
-  printf(CYAN "DEBUG: left %s\n" RESET, state);
+  
+  float event_time = time_passed();
+  
+  printf(CYAN "%f%s    left %s\n" RESET, event_time, time_unit, state);
   hashmap_update(states, state, (void *) false);
+  
+  fprintf(schedule -> control_log, "%f%s\tstate\t%s\tleave\n", event_time, time_unit, state);
 }
 
 void enter(Transition * trans) {

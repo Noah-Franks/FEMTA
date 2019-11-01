@@ -109,6 +109,10 @@ typedef struct Schedule {
   List * one_devices;          // list of all 1-wire device pointers
   List * pulse_pins;           // list of all pins that may pulse
   
+  FILE * i2c_error_log;        // bus error logs
+  FILE * one_error_log;        // --------------
+  FILE * control_log;          // transition/charge log (i2c bound for now)
+  
   long i2c_interval;           // scheduler spacing for the i2c protocol
   long one_interval;           // scheduler spacing for the 1-wire protocol
   

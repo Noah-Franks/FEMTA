@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 
+/* static configuration
+ *   specify options in origin.c
+ */
 extern bool console_error_messages;
 
 float experiment_duration;
