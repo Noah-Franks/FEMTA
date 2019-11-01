@@ -14,7 +14,7 @@ bool read_mcp9(i2c_device * mcp9_i2c);
 
 Sensor * init_mcp9(ProtoSensor * proto) {
 
-  /*Sensor * mcp9 = sensor_from_proto(proto);
+  Sensor * mcp9 = sensor_from_proto(proto);
 
   mcp9 -> name = "MCP9808";
   mcp9 -> free = free_mcp9;
@@ -30,14 +30,14 @@ Sensor * init_mcp9(ProtoSensor * proto) {
 
   printf("logged in logs/mcp9.log\n");
   
-  return mcp9;*/
+  return mcp9;
 
   return NULL;
 }
 
 bool read_mcp9(i2c_device * mcp9_i2c) {
   /*
-   * Binary address 0011000; hex address 18
+   * Binary address 0011111; hex address 1F
    * Can read max every t_conv, or 250ms w/ 0.0625 *C accuracy
    * Can read max every 30ms w/ 0.5 *C accuracy
    *
@@ -47,10 +47,9 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
    * signifies a Stop condition.
    */
   
-  /*Sensor * mcp9 = mcp9_i2c -> sensor;
+  Sensor * mcp9 = mcp9_i2c -> sensor;
 
   uint8 read_raws[2], upper, lower;
-  int sign = 1;
   double temp;
   
   if (!i2c_read_bytes(mcp9_i2c, 0x05, read_raws, 2)) return false;
@@ -60,15 +59,17 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
 
   if (upper & 0x10) {
     upper = upper & 0x0F;  // Mask last 4 bits
-    temp = 256 - (upper << 4 + lower >> 4);  // Get ambient temp. (-)
+    temp = 256 - ((upper << 4) + (lower >> 4));  // Get ambient temp. (-)
+    temp -= (lower & 0x0F) * 0.0625f;            // Get decimal value
   }
   else {
     upper = upper & 0x0F;  // Mask last 4 bits
-    temp = upper << 4 + lower >> 4;  // Get ambient temp. (+)
+    temp = (upper << 4) + (lower >> 4);    // Get ambient temp. (+)
+    temp += (lower & 0x0F) * 0.0625f;  // Get decimal value
   }
 
-  fprintf(mcp9 -> i2c -> log, "%f\n", temp);
-  */
+  fprintf(mcp9 -> i2c -> log, "%.4f\n", temp);
+  
   return true;
 }
 
