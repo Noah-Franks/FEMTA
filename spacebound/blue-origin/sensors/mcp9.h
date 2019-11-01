@@ -22,7 +22,7 @@
 
 #define MCP9_ADDRESS 0x1f
 
-Sensor * init_mcp9(ProtoSensor * proto);
+Sensor * init_mcp9(Sensor * proto);
 bool read_mcp9(i2c_device * mcp9_i2c);
 void free_mcp9(Sensor * ds32);
 

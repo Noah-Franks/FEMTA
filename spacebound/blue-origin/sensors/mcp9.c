@@ -12,27 +12,18 @@
 void free_mcp9(Sensor * sensor);
 bool read_mcp9(i2c_device * mcp9_i2c);
 
-Sensor * init_mcp9(ProtoSensor * proto) {
-
-  Sensor * mcp9 = sensor_from_proto(proto);
-
+Sensor * init_mcp9(Sensor * mcp9) {
+  
   mcp9 -> name = "MCP9808";
   mcp9 -> free = free_mcp9;
-
-  mcp9 -> i2c = create_i2c_device(mcp9, proto -> address, read_mcp9, proto -> hertz);
+  
+  mcp9 -> i2c = create_i2c_device(mcp9, read_mcp9);
   mcp9 -> i2c -> log = fopen("logs/mcp9.log", "a");
   
-  mcp9 -> print = proto -> print;
-
-  fprintf(mcp9 -> i2c -> log, GREEN "\nMCP9808\n" RESET);
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-	 mcp9 -> name, proto -> hertz, proto -> address);
-
   printf("logged in logs/mcp9.log\n");
+  printf("An ambient thermometer\n\n");
   
   return mcp9;
-
-  return NULL;
 }
 
 bool read_mcp9(i2c_device * mcp9_i2c) {
@@ -67,9 +58,8 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
     temp = (upper << 4) + (lower >> 4);    // Get ambient temp. (+)
     temp += (lower & 0x0F) * 0.0625f;  // Get decimal value
   }
-
-  fprintf(mcp9 -> i2c -> log, "%.4f\n", temp);
   
+  fprintf(mcp9 -> i2c -> log, "%.4f\n", temp);
   return true;
 }
 
