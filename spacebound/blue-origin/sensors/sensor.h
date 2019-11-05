@@ -134,6 +134,8 @@ char * time_unit;
 List    * active_sensors;      // every active sensor on craft
 Hashmap * all_sensors;         // every sensor that could be specified
 
+long time_start_os;            // time start from the OS's perspective
+
 int n_triggers;                // number of triggers
 
 float time_passed();    // time since experiment start

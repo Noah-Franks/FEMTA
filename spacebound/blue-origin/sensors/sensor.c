@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "ad15.h"
 #include "adxl.h"
@@ -257,7 +258,8 @@ void start_sensors() {
 }
 
 float time_passed() {
-  return (schedule -> interrupts) * (schedule -> interrupt_interval);
+  //return (schedule -> interrupts) * (schedule -> interrupt_interval);
+  return (float) (time(NULL) - time_start_os);
 }
 
 void sensor_call_free(void * vsensor) {
@@ -282,7 +284,8 @@ void sensor_call_free(void * vsensor) {
     free(sensor -> outputs[stream].unit);
   }
   
-  free(sensor -> outputs);
+  if (sensor -> outputs)
+    free(sensor -> outputs);
   free(sensor);
 }
 

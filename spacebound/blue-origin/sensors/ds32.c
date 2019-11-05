@@ -78,6 +78,8 @@ Sensor * init_ds32(Sensor * ds32) {
   
   schedule -> interrupt_interval = series_compute(time_output -> series, 1.0f);
   time_unit = time_output -> unit;
+
+  time_start_os = time(NULL);    // TEMP time the os start
   
   return ds32;
 }
