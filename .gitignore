@@ -2,7 +2,6 @@
 \#*
 .\#*
 ./FEMTA/spacebound/logs/*
-./FEMTA/spacebound/satellite-control/logs
 ./FEMTA/spacebound/satellite-control/logs/*.txt
 ./FEMTA/spacebound/satellite-control/unified-controller
 ./FEMTA/spacebound/satellite-control/femta
@@ -25,4 +24,5 @@ compiler
 spacebound/blue-origin/compiler/
 .DS_Store
 spacebound/blue-origin/data/*
+spacebound/blue-origin/backups/*
 *.dot

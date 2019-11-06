@@ -16,6 +16,7 @@
 
 #include "../structures/list.h"
 #include "../sensors/sensor.h"
+#include "../system/file.h"
 #include "../types/types.h"
 #include "../types/thread-types.h"
 
@@ -28,7 +29,7 @@ one_device * create_one_device(Sensor * sensor, char * path, char * log_path, on
   
   one -> sensor = sensor;
   one -> path   = path;
-  one -> log    = fopen(log_path, "a");
+  one -> log    = safe_open(log_path, "a");
   one -> read   = read;
   
   if (!one -> log) {
@@ -105,7 +106,7 @@ void * one_main() {
   
   sched_setparam(0, &priority);
   
-  FILE * one_log = fopen("logs/one.log", "a");
+  FILE * one_log = safe_open("logs/one.log", "a");
   fprintf(one_log, GRAY "Read duration [ns]\n" RESET);
 
   long last_read_duration = 0;    // tracks time taken to read 1-wire bus

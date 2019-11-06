@@ -7,6 +7,7 @@
 #include "ds32.h"
 
 #include "../system/color.h"
+#include "../system/file.h"
 #include "../system/i2c.h"
 
 const float adxl_bias_x =  0.0371;
@@ -27,7 +28,7 @@ Sensor * init_adxl(Sensor * adxl) {
   printf("logged in logs/adxl.log\n");
   printf("An accelerometer\n\n");
   
-  adxl -> i2c -> log = fopen("logs/adxl.log", "a");
+  adxl -> i2c -> log = safe_open("logs/adxl.log", "a");
   
   fprintf(adxl -> i2c -> log, RED "\n\nADXL345\nStart time %s\nAccel x\tAccel y\tAccel z\n" RESET, formatted_time);
   

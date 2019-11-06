@@ -8,6 +8,7 @@
 #include "fram.h"
 
 #include "../system/color.h"
+#include "../system/file.h"
 #include "../system/i2c.h"
 
 void free_fram(Sensor * fram);
@@ -24,7 +25,7 @@ Sensor * init_fram(Sensor * fram) {
   printf("logged in logs/fram.log\n");
   printf("A storage medium\n\n");
   
-  fram -> i2c -> log = fopen("logs/fram.log", "a");
+  fram -> i2c -> log = safe_open("logs/fram.log", "a");
   
   setlinebuf(fram -> i2c -> log);    // write out every read
   

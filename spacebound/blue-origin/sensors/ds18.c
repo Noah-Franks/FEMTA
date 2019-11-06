@@ -15,6 +15,7 @@
 
 #include "../structures/selector.h"
 #include "../system/color.h"
+#include "../system/file.h"
 #include "../system/clock.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
@@ -49,7 +50,7 @@ bool read_ds18(one_device * ds18_one) {
   
   Sensor * ds18 = ds18_one -> sensor;
   
-  FILE * file = fopen(ds18_one -> path, "r");
+  FILE * file = safe_open(ds18_one -> path, "r");
   
   if (!file) {
     printf(RED "Could not read %s for ds18: %s\n" RESET, ds18_one -> path, strerror(errno));

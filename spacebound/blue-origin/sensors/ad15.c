@@ -12,6 +12,7 @@
 #include "../.origin/origin.h"
 #include "../math/units.h"
 #include "../system/color.h"
+#include "../system/file.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
 
@@ -82,7 +83,7 @@ Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
   printf("logged in %s\n", file_name);
   printf("An analog to digital converter\n\n");
   
-  FILE * log = fopen(file_name, "a");
+  FILE * log = safe_open(file_name, "a");
   
   ad15 -> i2c -> log = log;
   

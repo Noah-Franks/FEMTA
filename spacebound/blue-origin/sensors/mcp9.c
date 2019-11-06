@@ -6,6 +6,7 @@
 #include "mcp9.h"
 
 #include "../system/color.h"
+#include "../system/file.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
 
@@ -18,7 +19,7 @@ Sensor * init_mcp9(Sensor * mcp9) {
   mcp9 -> free = free_mcp9;
   
   mcp9 -> i2c = create_i2c_device(mcp9, read_mcp9);
-  mcp9 -> i2c -> log = fopen("logs/mcp9.log", "a");
+  mcp9 -> i2c -> log = safe_open("logs/mcp9.log", "a");
   
   printf("logged in logs/mcp9.log\n");
   printf("An ambient thermometer\n\n");

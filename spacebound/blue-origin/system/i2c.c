@@ -16,6 +16,7 @@
 #include "../.origin/origin.h"
 #include "../sensors/sensor.h"
 #include "../structures/list.h"
+#include "../system/file.h"
 #include "../system/gpio.h"
 #include "../types/types.h"
 #include "../types/thread-types.h"
@@ -161,8 +162,8 @@ void init_i2c() {
   for (int i = 0; i < 0x7F; i++)
     handles[i] = -1;
   
-  schedule -> i2c_error_log = fopen("./logs/errors-i2c.log", "a");
-  schedule -> control_log = fopen("./logs/control.log", "a");
+  schedule -> i2c_error_log = safe_open("./logs/errors-i2c.log", "a");
+  schedule -> control_log = safe_open("./logs/control.log", "a");
   
   fprintf(schedule -> control_log, GRAY "Time\tEvent\tInstance\tValue\n" RESET);
   fprintf(schedule -> i2c_error_log, RED "Time\tType\t\tRegister\tBytes\n" RESET);
@@ -196,7 +197,7 @@ void * i2c_main() {
   
   prctl(PR_SET_NAME, "i2c sched", NULL, NULL, NULL);
   
-  FILE * i2c_log = fopen("logs/i2c.log", "a");
+  FILE * i2c_log = safe_open("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
   
   long bus_interval    = schedule -> i2c_interval;

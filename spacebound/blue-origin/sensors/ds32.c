@@ -1,5 +1,4 @@
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,6 +11,7 @@
 #include "../.origin/origin.h"
 #include "../math/units.h"
 #include "../system/color.h"
+#include "../system/file.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
 
@@ -32,7 +32,7 @@ Sensor * init_ds32(Sensor * ds32) {
   printf("logged in logs/ds32.log\n");
   printf("A real time clock\n\n");
   
-  ds32 -> i2c -> log = fopen("logs/ds32.log", "a");
+  ds32 -> i2c -> log = safe_open("logs/ds32.log", "a");
   
   //set_time_ds32(ds32);
   
