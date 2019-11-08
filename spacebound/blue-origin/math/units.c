@@ -255,6 +255,9 @@ float series_compute(List * series, float x) {
   // compute a series of conversions to get a final value.
   // the series may include universal conversions as well as sensor-specific ones.
   
+  if (!series)    // the null series is defined to be the identity
+    return x;
+  
   for (iterate(series, SeriesElement *, step))
     if (step -> universal) x = (step -> conversion)(x);
     else                   x = compute_curve(x, step -> calibration);

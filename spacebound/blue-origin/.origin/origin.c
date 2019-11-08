@@ -31,6 +31,8 @@ void parse_args(int, char **);
 
 int main(int argc, char ** argv) {
   
+  time_start_os = time(NULL);    // OS time when system started
+  
   // start pigpio library
   if (gpioInitialise() < 0)
     exit_printing("pigpio unable to start\n", ERROR_OPERATING_SYSTEM);

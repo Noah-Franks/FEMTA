@@ -102,7 +102,7 @@ Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
     Output * output = &ad15 -> outputs[stream];
     
     output -> enabled = true;
-
+    
     if (!output -> series) {
       
       Calibration * calibration = calloc(1, sizeof(*calibration));

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "ds32.h"
 #include "mcp9.h"
 
 #include "../system/color.h"
@@ -24,6 +25,16 @@ Sensor * init_mcp9(Sensor * mcp9) {
   printf("logged in logs/mcp9.log\n");
   printf("An ambient thermometer\n\n");
   
+  
+  /* set up output data stream */
+  
+  Output * output = &mcp9 -> outputs[MCP9_MEASURE_TEMPERATURE];
+  
+  output -> enabled = true;
+  
+  fprintf(mcp9 -> i2c -> log, RED "\n\nMCP9\nStart time %s\nTime [%s]\tTemperature [%s]\n" RESET,
+	  formatted_time, time_unit, output -> unit);
+  
   return mcp9;
 }
 
@@ -40,27 +51,40 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
    */
   
   Sensor * mcp9 = mcp9_i2c -> sensor;
-
-  uint8 read_raws[2], upper, lower;
-  double temp;
+  
+  uint8 read_raws[2];
+  double temperature;
   
   if (!i2c_read_bytes(mcp9_i2c, 0x05, read_raws, 2)) return false;
-
-  upper = read_raws[0];
-  lower = read_raws[1];
-
+  
+  u8 upper = read_raws[0];
+  u8 lower = read_raws[1];
+  
   if (upper & 0x10) {
     upper = upper & 0x0F;  // Mask last 4 bits
-    temp = 256 - ((upper << 4) + (lower >> 4));  // Get ambient temp. (-)
-    temp -= (lower & 0x0F) * 0.0625f;            // Get decimal value
+    temperature = 256 - ((upper << 4) + (lower >> 4));  // Get ambient temp. (-)
+    temperature -= (lower & 0x0F) * 0.0625f;            // Get decimal value
   }
   else {
     upper = upper & 0x0F;  // Mask last 4 bits
-    temp = (upper << 4) + (lower >> 4);    // Get ambient temp. (+)
-    temp += (lower & 0x0F) * 0.0625f;  // Get decimal value
+    temperature = (upper << 4) + (lower >> 4);          // Get ambient temp. (+)
+    temperature += (lower & 0x0F) * 0.0625f;            // Get decimal value
   }
   
-  fprintf(mcp9 -> i2c -> log, "%.4f\n", temp);
+  
+  /* collected raw values, now to assign output streams */
+  
+  Output * output = &mcp9 -> outputs[MCP9_MEASURE_TEMPERATURE];
+  
+  output -> measure = series_compute(output -> series, temperature);
+  
+  if (mcp9 -> print)
+    printf("%s%s      %.5fs    %.4f%s\n",
+	   mcp9 -> print_code, mcp9 -> code_name, time_passed(), output -> measure, output -> unit);
+  
+  fprintf(mcp9_i2c -> log, "%.5f\t%.5f\n", time_passed(), temperature);
+  
+  sensor_process_triggers(mcp9);
   return true;
 }
 
