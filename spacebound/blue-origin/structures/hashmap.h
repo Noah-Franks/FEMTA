@@ -47,7 +47,6 @@ int compare_addresses(void * first, void * other);    // (void *, void *)
 void print_hashmap_long(HashmapElement * element);
 
 
-
 void * hashmap_get    (Hashmap * this, void * key);
 void   hashmap_add    (Hashmap * this, void * key, void * value);
 void   hashmap_update (Hashmap * this, void * key, void * value);

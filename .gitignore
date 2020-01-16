@@ -26,3 +26,4 @@ spacebound/blue-origin/compiler/
 spacebound/blue-origin/data/*
 spacebound/blue-origin/backups/*
 *.dot
+spacebound/blue-origin/parser/y.tab.*

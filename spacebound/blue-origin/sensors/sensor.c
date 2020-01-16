@@ -47,6 +47,10 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
       proto -> outputs[stream].regressive = 1.0f;
       proto -> outputs[stream].enabled    = true;
     }
+    
+    // assign a default name to each output channel
+    for (iterate(targets -> keys, char *, name))
+      proto -> outputs[(int) hashmap_get(targets, name)].name = name;
   }
   
   return proto;
@@ -346,60 +350,18 @@ void flip_print(void * nil, char * raw_text) {
       sensor -> print = !sensor -> print;
 }
 
-void sensor_process_triggers(Sensor * sensor) {
-  
-  for (int stream = 0; stream < sensor -> data_streams; stream++) {
-    
-    Output * output = &sensor -> outputs[stream];
-    
-    if (!output -> enabled) continue;
-    
-    // apply smoothing before considering triggers
-    output -> smoothed = (output -> regressive) * (output -> measure) + (1.0f - output -> regressive) * (output -> smoothed);
-    
-    float measure = output -> smoothed;    // by default, smoothing equals measure
-    
-    for (iterate(output -> triggers, Trigger *, trigger)) {
-      
-      bool precondition_met = true;
-      for (iterate(trigger -> precondition, char *, state)) {
-	if (!state_get(state)) {
-	  precondition_met = false;
-	  break;
-	}
-      }
-      
-      if (!precondition_met                      ) continue;                       // not in all states required
-      if (trigger -> singular && trigger -> fired) continue;                       // never fire singulars twice
-      
-      float threshold = trigger -> threshold;                                      // same units (by Invariant 2)
-      
-      if ( trigger -> less && measure > threshold) continue;                       // means condition is not true
-      if (!trigger -> less && measure < threshold) continue;                       // ---------------------------
-      
-      for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge,  true);
-      for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, false);
-      
-      for (iterate(trigger -> enter_set, Transition *, trans)) enter(trans);
-      for (iterate(trigger -> leave_set, Transition *, trans)) leave(trans);
-      
-      trigger -> fired = true;
-    }
-  }
-}
-
 void sensor_print_to_console(Sensor * sensor) {
   /* the default format for printing to the console */
   
   printf("%s%s     ", sensor -> print_code, sensor -> code_name);
-  printf("%.2f%s    %.2fs", time_passed(), time_unit, 0);
+  printf("%.2f%s   %.2fs", time_passed(), time_unit, 0);
   
   for (int i = 0; i < sensor -> data_streams; i++) {
     
     Output * output = &sensor -> outputs[i];
       
     if (output -> measure >= 0) printf(" ");
-    printf("   %.3f%s", output -> measure, output -> unit);
+    printf("  %.3f%s", output -> measure, output -> unit);
   }
   
   printf("\n");
@@ -419,4 +381,48 @@ void sensor_log_outputs(Sensor * sensor, FILE * file) {
   }
   
   fprintf(file, "\n");
+}
+
+void sensor_process_triggers(Sensor * sensor) {
+  
+  for (int stream = 0; stream < sensor -> data_streams; stream++) {
+    
+    Output * output = &sensor -> outputs[stream];
+    
+    if (!output -> enabled) continue;
+    
+    // apply smoothing before considering triggers
+    output -> smoothed = 
+      (       output -> regressive) * (output -> measure ) + 
+      (1.0f - output -> regressive) * (output -> smoothed);
+    
+    float measure = output -> smoothed;    // by default, smoothing equals measure
+    
+    for (iterate(output -> triggers, Trigger *, trigger)) {
+      
+      bool precondition_met = true;
+      for (iterate(trigger -> precondition, char *, state)) {
+        if (!state_get(state)) {
+          precondition_met = false;
+          break;
+        }
+      }
+      
+      if (!precondition_met                      ) continue;                       // not in all states required
+      if (trigger -> singular && trigger -> fired) continue;                       // never fire singulars twice
+      
+      float threshold = trigger -> threshold;                                      // same units (by Invariant 2)
+      
+      if ( trigger -> less && measure > threshold) continue;                       // means condition is not true
+      if (!trigger -> less && measure < threshold) continue;                       // ---------------------------
+      
+      for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge,  true);
+      for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, false);
+      
+      for (iterate(trigger -> enter_set, Transition *, trans)) enter(trans);
+      for (iterate(trigger -> leave_set, Transition *, trans)) leave(trans);
+      
+      trigger -> fired = true;
+    }
+  }
 }

@@ -76,6 +76,6 @@ bool read_test(i2c_device * test_i2c) {
   return true;
 }
 
-void free_test(Sensor * ds32) {
+void free_test(Sensor * test) {
   // nothing needs to happen
 }

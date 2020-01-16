@@ -15,6 +15,8 @@
 #include "../system/compiler.h"
 #include "../system/error.h"
 
+extern void yyerror(char * message);
+
 Hashmap * conversions;
 Hashmap * unit_types;
 List    * all_units;
@@ -204,7 +206,7 @@ Conversion get_universal_conversion(char * from, char * to) {
   if (unlikely(conversion == NULL)) {
     print_units_supported();
     printf("Unknown conversion %s -> %s\n", from, to);
-    printf("Please use units from the table above\n");
+    yyerror("Please use units from the table above\n");
     gpioTerminate();
     exit(ERROR_EXPERIMENTER);
   }
