@@ -32,6 +32,7 @@ void parse_args(int, char **);
 int main(int argc, char ** argv) {
   
   time_start_os = time(NULL);    // OS time when system started
+  //clock_gettime(CLOCK_REALTIME, &time_start_os);
   
   // start pigpio library
   if (gpioInitialise() < 0)

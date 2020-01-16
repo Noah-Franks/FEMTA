@@ -26,7 +26,6 @@
 
 Sensor * init_mcp9(Sensor * proto);
 bool read_mcp9(i2c_device * mcp9_i2c);
-void free_mcp9(Sensor * ds32);
+void free_mcp9(Sensor * mcp9);
 
 #endif
-

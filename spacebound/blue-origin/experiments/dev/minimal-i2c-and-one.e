@@ -1,8 +1,6 @@
 
-ds32 1Hz {
+define enter start;
 
-} print;
-
-ds18 1Hz {
-
-} print;
+ad15_gnd 1Hz {
+	 [print | cyan | ];
+}

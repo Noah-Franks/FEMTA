@@ -30,8 +30,9 @@ void real_milli_sleep(long ms) {
 long real_time_diff(struct timespec * past) {
   
   struct timespec now;
-
+  
   clock_gettime(CLOCK_REALTIME, &now);
-
+  
+  //return (long) (now.tv_sec - past->tv_sec) * 1000000000l + (long) (now.tv_nsec - past->tv_nsec);
   return (now.tv_sec - past->tv_sec) * 1E9 + (now.tv_nsec - past->tv_nsec);
 }

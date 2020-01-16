@@ -1,5 +1,4 @@
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,6 +10,7 @@
 #include "ds32.h"
 #include "fram.h"
 #include "mcp9.h"
+#include "test.h"
 #include "sensor.h"
 
 #include "../math/mathematics.h"
@@ -18,6 +18,7 @@
 #include "../structures/list.h"
 #include "../structures/hashmap.h"
 #include "../system/class.h"
+#include "../system/clock.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
 #include "../system/state.h"
@@ -37,14 +38,15 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
   proto -> print_hertz = 5;
   
   
-  
   // Check to see if the sensor produces data (possible by Invariant 1)
   if (targets && targets -> elements) {
     proto -> data_streams = targets -> elements;
     proto -> outputs      = calloc(targets -> elements, sizeof(*proto -> outputs));
     
-    for (int stream = 0; stream < proto -> data_streams; stream++)
+    for (int stream = 0; stream < proto -> data_streams; stream++) {
       proto -> outputs[stream].regressive = 1.0f;
+      proto -> outputs[stream].enabled    = true;
+    }
   }
   
   return proto;
@@ -64,6 +66,7 @@ void init_sensors() {
   Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
+  Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, 5);
   Hashmap * fram_tar = NULL;
   
   hashmap_add(ds32_tar, "Time"       , (void *) (int) DS32_MEASURE_TIME       );
@@ -72,6 +75,12 @@ void init_sensors() {
   hashmap_add(ds18_tar, "Temperature", (void *) (int) 0);
   
   hashmap_add(mcp9_tar, "Temperature", (void *) (int) MCP9_MEASURE_TEMPERATURE);
+  
+  hashmap_add(test_tar, "zero"    , (void *) (int) TEST_MEASURE_ZERO    );
+  hashmap_add(test_tar, "identity", (void *) (int) TEST_MEASURE_IDENTITY);
+  hashmap_add(test_tar, "sine"    , (void *) (int) TEST_MEASURE_SINE    );
+  hashmap_add(test_tar, "cosine"  , (void *) (int) TEST_MEASURE_COSINE  );
+  hashmap_add(test_tar, "random"  , (void *) (int) TEST_MEASURE_RANDOM  );
   
   hashmap_add(adxl_tar, "X", (void *) (int) 0);
   hashmap_add(adxl_tar, "Y", (void *) (int) 1);
@@ -90,6 +99,7 @@ void init_sensors() {
   hashmap_add(all_sensors, "fram"    , sensor_create("fram", FRAM_ADDRESS, fram_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds18"    , sensor_create("ds18",            0, ds18_tar, ONE_BUS));
   hashmap_add(all_sensors, "mcp9"    , sensor_create("mcp9", MCP9_ADDRESS, mcp9_tar, I2C_BUS));
+  hashmap_add(all_sensors, "test"    , sensor_create("test", TEST_ADDRESS, test_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_gnd", sensor_create("ad15_gnd", AD15_GND, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_vdd", sensor_create("ad15_vdd", AD15_VDD, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_sda", sensor_create("ad15_sda", AD15_SDA, ad15_tar, I2C_BUS));
@@ -207,6 +217,16 @@ void start_sensors() {
   }
   
   
+  // test
+  proto = hashmap_get(all_sensors, "test");
+  
+  if (proto -> requested) {
+    Sensor * test = init_test(proto);
+    list_insert(active_sensors,          test       );
+    list_insert(schedule -> i2c_devices, test -> i2c);
+  }
+  
+  
   // ad15
   Sensor * ad15[4] = {
     NULL, NULL, NULL, NULL,
@@ -223,7 +243,7 @@ void start_sensors() {
   }
   
   proto = hashmap_get(all_sensors, "ad15_vdd");
-
+  
   if (proto -> requested) {
     ad15[1] = init_ad15(proto, "Alcohol Pressure",
 			list_from(4, A0, A1, A2, A3),
@@ -274,7 +294,9 @@ void start_sensors() {
 }
 
 float time_passed() {
+  
   //return (schedule -> interrupts) * (schedule -> interrupt_interval);
+  //return (float) real_time_diff(&time_start_os) / 1E9;
   return (float) (time(NULL) - time_start_os);
 }
 
@@ -364,4 +386,37 @@ void sensor_process_triggers(Sensor * sensor) {
       trigger -> fired = true;
     }
   }
+}
+
+void sensor_print_to_console(Sensor * sensor) {
+  /* the default format for printing to the console */
+  
+  printf("%s%s     ", sensor -> print_code, sensor -> code_name);
+  printf("%.2f%s    %.2fs", time_passed(), time_unit, 0);
+  
+  for (int i = 0; i < sensor -> data_streams; i++) {
+    
+    Output * output = &sensor -> outputs[i];
+      
+    if (output -> measure >= 0) printf(" ");
+    printf("   %.3f%s", output -> measure, output -> unit);
+  }
+  
+  printf("\n");
+}
+
+void sensor_log_outputs(Sensor * sensor, FILE * file) {
+  /* the format for every sensor log    
+   * the log file is assumed to be open */
+  
+  fprintf(file, "%.5f\t%.4f", time_passed(), 0);
+  
+  for (int i = 0; i < sensor -> data_streams; i++) {
+    
+    Output * output = &sensor -> outputs[i];
+    
+    fprintf(file, "\t%.4f", output -> measure);
+  }
+  
+  fprintf(file, "\n");
 }

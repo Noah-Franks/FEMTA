@@ -15,9 +15,9 @@
  */
 
 
-
 #include <stdbool.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "../math/units.h"
 #include "../structures/list.h"
@@ -64,6 +64,7 @@ typedef struct Output {
   float  smoothed;        // measurement after smoothing
   List * series;          // path of conversions required to get final measurement
   List * triggers;        // sensor triggers for this particular output stream
+  char * name;            // name of the output for the log file
   char * unit;            // final unit for logging and triggers
   float  regressive;      // smoothing constant
   bool   enabled;         // whether output is enabled
@@ -91,14 +92,13 @@ typedef struct Sensor {
   sensor_free free;         // how to free sensor
   
   
-  
   int hertz;                 // bus communication frequency in hertz
   int hertz_denominator;     // engenders fractional frequency through deferrals
   
   bool requested;            // whether sensor has actually been specified during parsing
   
   uint8 address;             // i2c address
-
+  
   void * data;               // sensor-specific data
   
 } Sensor;
@@ -131,10 +131,10 @@ typedef struct Schedule {
 Schedule * schedule;
 char * time_unit;
 
+long time_start_os;  // system start from the OS's perspective
+
 List    * active_sensors;      // every active sensor on craft
 Hashmap * all_sensors;         // every sensor that could be specified
-
-long time_start_os;            // time start from the OS's perspective
 
 int n_triggers;                // number of triggers
 
@@ -144,6 +144,8 @@ void init_sensors();
 void start_sensors();
 void terminate_sensors();
 void sensor_process_triggers(Sensor * sensor);
+void sensor_log_outputs(Sensor * sensor, FILE * file);
+void sensor_print_to_console(Sensor * sensor);
 
 void flip_print(void * nil, char * raw_text);
 

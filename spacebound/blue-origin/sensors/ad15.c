@@ -112,7 +112,7 @@ Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
       calibration -> unit_to   = strdup(  "mV");
       calibration -> target    = NULL;
       calibration -> constants =
-	list_from(2, numeric_from_decimal(0.0001874287), numeric_from_decimal(-0.0009012627));
+        list_from(2, numeric_from_decimal(0.0001874287), numeric_from_decimal(-0.0009012627));
       
       output -> series = list_from(1, series_element_from_calibration(calibration));
       output -> unit   = strdup("mV");
@@ -125,7 +125,7 @@ Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
   
   // set up the configuration  (datasheet page 19)
   
-  AD15_Config * sensor_config = malloc(sizeof(AD15_Config));
+  AD15_Config * sensor_config = malloc(sizeof(*sensor_config));
   
   sensor_config -> COMP_QUE  = AD15_QUE_DISABLE;
   sensor_config -> COMP_LAT  = AD15_LAT_DONT_LATCH;

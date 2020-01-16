@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <pthread.h>
 #include <pigpio.h>
 #include <sys/prctl.h>
@@ -148,7 +149,12 @@ void i2c_close(i2c_device * i2c) {
   fclose(schedule -> i2c_error_log);
   fclose(schedule -> control_log);    // change if not i2c-bound
   fclose(i2c -> log);
-  i2cClose(i2c -> handle);
+  
+  // only close i2c addresses once
+  if (handles[i2c -> handle] != -1 && i2c -> handle >= 0x03) {
+    i2cClose(i2c -> handle);
+    handles[i2c -> handle] = -1;
+  }
   free(i2c);
 }
 
@@ -157,16 +163,15 @@ void init_i2c() {
   
   schedule -> i2c_devices = list_create();
   schedule -> i2c_thread  = malloc(sizeof(*schedule -> i2c_thread));
-    
-  // prepare handle array
-  for (int i = 0; i < 0x7F; i++)
-    handles[i] = -1;
+  
+  memset(handles, -1, 0x7F);    // 0x03 through 0x7F are available
+  memset(handles,  0,    2);    // 0x00 through 0x02 are reserved
   
   schedule -> i2c_error_log = safe_open("./logs/errors-i2c.log", "a");
-  schedule -> control_log = safe_open("./logs/control.log", "a");
+  schedule ->   control_log = safe_open("./logs/control.log"   , "a");
   
-  fprintf(schedule -> control_log, GRAY "Time\tEvent\tInstance\tValue\n" RESET);
-  fprintf(schedule -> i2c_error_log, RED "Time\tType\t\tRegister\tBytes\n" RESET);
+  fprintf(schedule ->   control_log, GRAY "Time\tEvent\tInstance\tValue\n" RESET);
+  fprintf(schedule -> i2c_error_log, RED  "Time\tType\tRegister\tBytes\n"  RESET);
 }
 
 void start_i2c() {
@@ -232,7 +237,7 @@ void * i2c_main() {
 
     // change states
     for (iterate(state_delays -> all, StateDelay *, state_delay)) {
-
+      
       //printf("DEBUG STATE: %s " CYAN "%d" RESET "\n", state_delay -> state, state_delay -> ms_remaining);
       
       if (!state_delay -> ms_remaining) continue;
