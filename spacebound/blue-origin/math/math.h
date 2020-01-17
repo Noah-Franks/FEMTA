@@ -1,9 +1,4 @@
-#ifndef HEADER_GAURD_MATHEMATICS
-#define HEADER_GAURD_MATHEMATICS
-
-#define compiler_constant __attribute__((const))
-
-int gcd(int a, int b) compiler_constant;
+#pragma once
 
 #define square(X)				\
   ({ __typeof__(X) __x = (X);			\
@@ -19,5 +14,3 @@ int gcd(int a, int b) compiler_constant;
   ({ __typeof__ (b) __b = (b);                                          \
     ((a) <= (__b) && ((__b) <= (c)));                                   \
   })
-
-#endif

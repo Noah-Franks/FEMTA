@@ -1,13 +1,7 @@
-#ifndef HEADER_GAURD_ORIGIN
-#define HEADER_GAURD_ORIGIN
+#pragma once
 
-#include <stdbool.h>
+#include "../include/headers.h"
 
-/* static configuration
- *   specify options in origin.c
- */
+/* static configuration */
+
 extern bool console_error_messages;
-
-float experiment_duration;
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef HEADER_GAURD_SENSOR
-#define HEADER_GAURD_SENSOR
+#pragma once
 
 /**
  * @Invariant_0 A sensor shall always be called "proto" until it is initialized.
@@ -14,28 +13,10 @@
  * output streams and log files use.
  */
 
-
-#include <stdbool.h>
-#include <stdio.h>
-#include <time.h>
-
-#include "../math/units.h"
-#include "../structures/list.h"
-#include "../structures/hashmap.h"
-#include "../system/i2c.h"
-#include "../system/one.h"
-#include "../system/state.h"
-#include "../types/types.h"
+#include "../include/headers.h"
 
 #define I2C_BUS 0x1
 #define ONE_BUS 0x2
-
-typedef struct Sensor Sensor;
-typedef struct i2c_device i2c_device;
-typedef struct one_device one_device;
-typedef struct Numeric Numeric;
-
-typedef void (* sensor_free)(Sensor * sensor);
 
 typedef struct Trigger {
   
@@ -128,25 +109,9 @@ typedef struct Schedule {
   
 } Schedule;
 
-Schedule * schedule;
-char * time_unit;
-
-long time_start_os;  // system start from the OS's perspective
-
-List    * active_sensors;      // every active sensor on craft
-Hashmap * all_sensors;         // every sensor that could be specified
-
-int n_triggers;                // number of triggers
-
-float time_passed();    // time since experiment start
-
-void init_sensors();
-void start_sensors();
-void terminate_sensors();
-void sensor_process_triggers(Sensor * sensor);
-void sensor_log_outputs(Sensor * sensor, FILE * file);
-void sensor_print_to_console(Sensor * sensor);
-
-void flip_print(void * nil, char * raw_text);
-
-#endif
+extern Schedule * schedule;
+extern char *     time_unit;
+extern long       time_start_os;     // system start from the OS's perspective
+extern List    *  active_sensors;    // every active sensor on craft
+extern Hashmap *  all_sensors;       // every sensor that could be specified
+extern int        n_triggers;        // number of triggers

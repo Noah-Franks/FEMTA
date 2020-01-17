@@ -1,12 +1,7 @@
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "../include/program.h"
 
-#include "color.h"
-
-#include "../structures/hashmap.h"
-
-static Hashmap * colors_by_name;
+local Hashmap * colors_by_name;
 
 void init_color() {
   

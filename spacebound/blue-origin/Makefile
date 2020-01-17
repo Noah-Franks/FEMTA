@@ -39,10 +39,10 @@ parser: $(wildcard parser/*.y parser/*.l parser/trick.nil)
 	cd parser && yacc -d -t -Dparse.trace parser.y && lex parser.l && cd ..
 
 clean:
-	rm -rf compiler                      # blow away compiled objects
-	rm -f *.x                            # blow away binaries
-	rm -f gmon.out                       # blow away profiling outputs
-	touch fake~ && mv -f *~ backups/     # move emacs backups
+	rm -rf compiler                             # blow away compiled objects
+	rm -f *.x                                   # blow away binaries
+	rm -f gmon.out                              # blow away profiling outputs
+	touch data/empty~ && mv -f */*~ .backups/   # move emacs backups
 
 wipe:
 	rm -f auto.log

@@ -1,30 +1,9 @@
 
-#define _GNU_SOURCE
+#include "../include/program.h"
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <pthread.h>
-#include <pigpio.h>
-#include <sys/prctl.h>
-#include <time.h>
+local int8 handles[0x7F];
 
-#include "clock.h"
-#include "color.h"
-#include "i2c.h"
-
-#include "../.origin/origin.h"
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-#include "../system/file.h"
-#include "../system/gpio.h"
-#include "../types/types.h"
-#include "../types/thread-types.h"
-
-int8 handles[0x7F];
-
-void * i2c_main();
+local void * i2c_main();
 
 i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {
   // creates an i2c device, adding it to the device list

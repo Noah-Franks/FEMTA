@@ -1,28 +1,8 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <time.h>
-#include <pigpio.h>
+#include "../include/program.h"
 
-#include "ds18.h"
-#include "ds32.h"
-#include "sensor.h"
-
-#include "../structures/selector.h"
-#include "../system/color.h"
-#include "../system/file.h"
-#include "../system/clock.h"
-#include "../system/gpio.h"
-#include "../system/i2c.h"
-
-
-void free_ds18(Sensor * sensor);
-bool read_ds18(one_device * ds18_one);
+local void free_ds18(Sensor * sensor);
+local bool read_ds18(one_device * ds18_one);
 
 Sensor * init_ds18(Sensor * ds18, char * path) {
   

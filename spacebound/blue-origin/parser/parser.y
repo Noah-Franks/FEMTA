@@ -1,29 +1,14 @@
 
 %{
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../math/mathematics.h"
-#include "../math/units.h"
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-#include "../structures/hashmap.h"
-#include "../system/color.h"
-#include "../system/error.h"
-#include "../system/gpio.h"
-#include "../system/state.h"
-
+#include "../include/program.h"
 
 extern FILE * yyin;
 
 int  yylex();
 void yyerror(char * message);
 
-typedef struct Numeric Numeric;
 typedef struct EffectNode EffectNode;
 typedef struct Specification Specification;
-typedef struct Trigger Trigger;
 
 EffectNode    * make_charge(Numeric * wire, bool hot);
 EffectNode    * make_transition(char * state_name, bool entering);
@@ -39,11 +24,7 @@ void print_config();
 
 %code requires {
   
-  #include <stdbool.h>
-  #include "../math/units.h"
-  #include "../structures/list.h"
-  #include "../system/gpio.h"
-  #include "../sensors/sensor.h"
+  #include "../include/program.h"
   
   typedef struct EffectNode {
     
@@ -85,7 +66,7 @@ void print_config();
   Specification * specification;
 }
 
-%token IF SET ENTER LEAVE AFTER STATE PIN POS NEG DEFINE
+%token IF SET ENTER LEAVE AFTER STATE PIN POS NEG DEFINE SENSOR
 
 %token  <string>        ID
 %token  <numeric>       NUMERIC
@@ -128,10 +109,10 @@ Sensors  : Sensor
          | Sensors Sensor
          ;
 
-Sensor   : ID NUMERIC             '{'       '}'            { build_sensor($1, $2,      NULL,  NULL);              }
-         | ID NUMERIC             '{' Specs '}'            { build_sensor($1, $2,      NULL,    $4);              }
-         | ID NUMERIC '/' NUMERIC '{'       '}'            { build_sensor($1, $2, $4, NULL);                      }
-         | ID NUMERIC '/' NUMERIC '{' Specs '}'            { build_sensor($1, $2, $4,   $6);                      }
+Sensor   : SENSOR ID NUMERIC             '{'       '}'     { build_sensor($2, $3,      NULL,  NULL);              }
+         | SENSOR ID NUMERIC             '{' Specs '}'     { build_sensor($2, $3,      NULL,    $5);              }
+         | SENSOR ID NUMERIC '/' NUMERIC '{'       '}'     { build_sensor($2, $3, $5, NULL);                      }
+         | SENSOR ID NUMERIC '/' NUMERIC '{' Specs '}'     { build_sensor($2, $3, $5,   $7);                      }
          ;
 
 Specs    : Spec                                            { $$ = list_from(1, $1);                               }

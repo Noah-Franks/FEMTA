@@ -1,15 +1,9 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include "../include/program.h"
 
-#include "color.h"
-#include "state.h"
+Hashmap * state_delays;
 
-#include "../sensors/sensor.h"
-#include "../structures/hashmap.h"
-
-static Hashmap * states;    // maps string names to bools
+local Hashmap * states;    // maps string names to bools
 
 void init_states() {
   states       = hashmap_create(hash_string, compare_strings, key_free, 16);

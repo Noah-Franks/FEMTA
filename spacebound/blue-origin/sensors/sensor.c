@@ -1,29 +1,15 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+#include "../include/program.h"
 
-#include "ad15.h"
-#include "adxl.h"
-#include "ds18.h"
-#include "ds32.h"
-#include "fram.h"
-#include "mcp9.h"
-#include "test.h"
-#include "sensor.h"
+local void sensor_call_free(void *);
 
-#include "../math/mathematics.h"
-#include "../math/units.h"
-#include "../structures/list.h"
-#include "../structures/hashmap.h"
-#include "../system/class.h"
-#include "../system/clock.h"
-#include "../system/color.h"
-#include "../system/gpio.h"
-#include "../system/state.h"
+Schedule * schedule;
+char     * time_unit;
+long       time_start_os;     // system start from the OS's perspective
+List     * active_sensors;    // every active sensor on craft
+Hashmap  * all_sensors;       // every sensor that could be specified
+int        n_triggers;        // number of triggers
 
-void sensor_call_free(void *);
 
 Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus) {
   
@@ -71,7 +57,6 @@ void init_sensors() {
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, 5);
-  Hashmap * fram_tar = NULL;
   
   hashmap_add(ds32_tar, "Time"       , (void *) (int) DS32_MEASURE_TIME       );
   hashmap_add(ds32_tar, "Temperature", (void *) (int) DS32_MEASURE_TEMPERATURE);
@@ -100,8 +85,7 @@ void init_sensors() {
   
   hashmap_add(all_sensors, "adxl"    , sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds32"    , sensor_create("ds32", DS32_ADDRESS, ds32_tar, I2C_BUS));
-  hashmap_add(all_sensors, "fram"    , sensor_create("fram", FRAM_ADDRESS, fram_tar, I2C_BUS));
-  hashmap_add(all_sensors, "ds18"    , sensor_create("ds18",            0, ds18_tar, ONE_BUS));
+    hashmap_add(all_sensors, "ds18"    , sensor_create("ds18",            0, ds18_tar, ONE_BUS));
   hashmap_add(all_sensors, "mcp9"    , sensor_create("mcp9", MCP9_ADDRESS, mcp9_tar, I2C_BUS));
   hashmap_add(all_sensors, "test"    , sensor_create("test", TEST_ADDRESS, test_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_gnd", sensor_create("ad15_gnd", AD15_GND, ad15_tar, I2C_BUS));
@@ -208,16 +192,6 @@ void start_sensors() {
     Sensor * mcp9 = init_mcp9(proto);
     list_insert(active_sensors,          mcp9       );
     list_insert(schedule -> i2c_devices, mcp9 -> i2c);
-  }
-  
-  
-  // fram
-  proto = hashmap_get(all_sensors, "fram");
-  
-  if (proto -> requested) {
-    Sensor * fram = init_fram(proto);
-    list_insert(active_sensors,          fram       );
-    list_insert(schedule -> i2c_devices, fram -> i2c);
   }
   
   

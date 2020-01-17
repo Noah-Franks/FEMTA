@@ -1,14 +1,9 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
+#include "../include/program.h"
 
-#include "list.h"
-#include "selector.h"
+local void change_selector(void * selector);
 
-
-void change_selector(void * selector);
+bool reading_user_input;
 
 Selector * create_selector(Selector * parent) {
 
@@ -21,7 +16,7 @@ Selector * create_selector(Selector * parent) {
   return selector;
 }
 
-void add_selector_command(Selector * selector, char key, char * text, slambda action, void * argument) {
+void add_selector_command(Selector * selector, char key, char * text, selector_action action, void * argument) {
   
   Command * command = malloc(sizeof(Command));
 

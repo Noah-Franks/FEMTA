@@ -1,18 +1,12 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "color.h"
-#include "error.h"
+#include "../include/program.h"
 
 FILE * safe_open(char * path, char * mode) {
-
+  
   FILE * file = fopen(path, mode);
   
-  if (!file) {
-    printf(RED "Could not open " CYAN "%s\n", path);
-    exit_printing("Could not open a necessary file", ERROR_OPERATING_SYSTEM);
-  }
+  if (!file)
+    exit_printing(ERROR_OPERATING_SYSTEM, RED "Could not open " CYAN "%s\n", path);
   
   return file;
 }

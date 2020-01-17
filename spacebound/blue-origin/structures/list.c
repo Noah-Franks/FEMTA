@@ -1,12 +1,5 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdarg.h>
-
-#include "list.h"
-
-#include "../types/thread-types.h"
+#include "../include/program.h"
 
 ListNode * list_create_node(void * value) {
   ListNode * node = malloc(sizeof(ListNode));

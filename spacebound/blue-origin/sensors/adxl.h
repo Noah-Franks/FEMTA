@@ -1,5 +1,4 @@
-#ifndef HEADER_GAURD_ADXL
-#define HEADER_GAURD_ADXL
+#pragma once
 
 /**
  * Sensor:
@@ -17,13 +16,6 @@
  *   Noah Franks
  */
 
-
-#include "sensor.h"
-
-#include "../system/i2c.h"
+#include "../include/headers.h"
 
 #define ADXL_ADDRESS 0x53
-
-Sensor * init_adxl(Sensor * proto);
-
-#endif

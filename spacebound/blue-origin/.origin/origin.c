@@ -1,42 +1,21 @@
 
-#define _GNU_SOURCE
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
-#include <pigpio.h>
-#include <sys/prctl.h>
-
-#include "origin.h"
-
-#include "../math/units.h"
-#include "../sensors/sensor.h"
-#include "../system/clock.h"
-#include "../system/error.h"
-#include "../system/color.h"
-#include "../system/gpio.h"
-#include "../system/i2c.h"
-#include "../structures/list.h"
-#include "../structures/selector.h"
-#include "../types/types.h"
-#include "../parser/y.tab.h"
+#include "../include/program.h"
+//#include "../parser/y.tab.h"
 
 bool console_error_messages = true;
 
 FILE * yyin;
-void print_config();
-void parse_args(int, char **);
 
-int main(int argc, char ** argv) {
+local void parse_args(int, char **);
+
+int main(int nargs, char ** args) {
   
   time_start_os = time(NULL);    // OS time when system started
   //clock_gettime(CLOCK_REALTIME, &time_start_os);
   
   // start pigpio library
   if (gpioInitialise() < 0)
-    exit_printing("pigpio unable to start\n", ERROR_OPERATING_SYSTEM);
+    exit_printing(ERROR_OPERATING_SYSTEM, "pigpio unable to start");
   
   schedule = calloc(1, sizeof(*schedule));
   
@@ -48,7 +27,7 @@ int main(int argc, char ** argv) {
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   
-  parse_args(argc, argv);
+  parse_args(nargs, args);
   print_config();
   
   //gpioTerminate(); exit(0);    // TEMP

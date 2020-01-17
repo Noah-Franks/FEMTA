@@ -1,23 +1,14 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <pigpio.h>
+#include "../include/program.h"
 
-#include "ds32.h"
-#include "sensor.h"
+local void free_ds32(Sensor * ds32);
+local bool read_ds32(i2c_device * ds32_i2c);
+local bool ds32_start_square_wave(i2c_device * ds32_i2c);
+local void set_time_ds32(Sensor * ds32);
 
-#include "../.origin/origin.h"
-#include "../math/units.h"
-#include "../system/color.h"
-#include "../system/file.h"
-#include "../system/gpio.h"
-#include "../system/i2c.h"
-
-void free_ds32(Sensor * ds32);
-bool read_ds32(i2c_device * ds32_i2c);
-bool ds32_start_square_wave(i2c_device * ds32_i2c);
+int  initial_seconds;
+char formatted_time[32];
+long experiment_start_time;
 
 void schedule_tick(int gpio, int level, uint32_t tick) {
   schedule -> interrupts++;
@@ -157,8 +148,6 @@ bool read_ds32(i2c_device * ds32_i2c) {
   
   time_output -> measure = series_compute(time_output -> series, n_interrupts);
   temp_output -> measure = series_compute(temp_output -> series, temperature );
-  
-  experiment_duration = time_output -> measure;
   
   if (ds32 -> print)
     printf("%s%s      %.4f%s\t%.2f%s\t%s\n" RESET,

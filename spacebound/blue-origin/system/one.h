@@ -1,19 +1,6 @@
-#ifndef HEADER_GAURD_ONE
-#define HEADER_GAURD_ONE
+#pragma once
 
-#include <pthread.h>
-#include <stdbool.h>
-
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-#include "../types/types.h"
-#include "../types/thread-types.h"
-
-typedef struct Sensor Sensor;
-typedef struct ProtoSensor ProtoSensor;
-typedef struct one_device one_device;
-
-typedef bool (*one_reader)(one_device * one);
+#include "../include/headers.h"
 
 typedef struct one_device {
   
@@ -33,12 +20,3 @@ typedef struct one_device {
   one_reader read;
   
 } one_device;
-
-void init_one();
-void start_one();
-void terminate_one();
-
-one_device * create_one_device(Sensor * sensor, char * path, char * log_path, one_reader read);
-void one_close(one_device * one);
-
-#endif

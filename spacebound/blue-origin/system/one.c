@@ -1,27 +1,7 @@
 
-#define _GNU_SOURCE
+#include "../include/program.h"
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sched.h>
-#include <pthread.h>
-#include <pigpio.h>
-#include <sys/prctl.h>
-#include <time.h>
-
-#include "clock.h"
-#include "color.h"
-#include "one.h"
-
-#include "../structures/list.h"
-#include "../sensors/sensor.h"
-#include "../system/file.h"
-#include "../types/types.h"
-#include "../types/thread-types.h"
-
-
-void * one_main();
+local void * one_main();
 
 one_device * create_one_device(Sensor * sensor, char * path, char * log_path, one_reader read) {
   
@@ -93,7 +73,7 @@ void terminate_one() {
   schedule -> one_thread  = NULL;
 }
 
-void * one_main() {
+local void * one_main() {
   
   prctl(PR_SET_NAME, "1-wire sched", NULL, NULL, NULL);
   

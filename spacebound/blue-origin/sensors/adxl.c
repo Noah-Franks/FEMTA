@@ -1,14 +1,6 @@
 
 
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "adxl.h"
-#include "ds32.h"
-
-#include "../system/color.h"
-#include "../system/file.h"
-#include "../system/i2c.h"
+#include "../include/program.h"
 
 const float adxl_bias_x =  0.0371;
 const float adxl_bias_y = -0.0010;

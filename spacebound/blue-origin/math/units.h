@@ -1,12 +1,6 @@
-#ifndef HEADER_GAURD_UNITS
-#define HEADER_GAURD_UNITS
+#pragma once
 
-#include <stdbool.h>
-
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-
-typedef float (* Conversion)(float value);
+#include "../include/headers.h"
 
 typedef struct Numeric {
   
@@ -40,24 +34,3 @@ typedef struct SeriesElement {
   };
   
 } SeriesElement;
-
-void init_units();
-void drop_units();
-void print_units_supported();
-bool unit_is_supported(char * unit_name);
-bool unit_is_of_type(Numeric * numeric, char * type_name);
-
-Numeric * numeric_from_decimal(float decimal);
-Numeric * numeric_from_integer(float integer);
-
-Conversion get_universal_conversion(char * from, char * to);
-
-SeriesElement * series_element_from_conversion(Conversion conversion);
-SeriesElement * series_element_from_calibration(Calibration * calibration);
-
-float series_compute(List * series, float x);
-void  series_destroy(List * series);
-
-float convert_identity(float x);
-
-#endif

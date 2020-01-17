@@ -1,5 +1,4 @@
-#ifndef HEADER_GAURD_DS32
-#define HEADER_GAURD_DS32
+#pragma once
 
 /**
  * Sensor:
@@ -17,22 +16,13 @@
  *   Noah Franks
  */
 
-
-#include "sensor.h"
-
-#include "../system/i2c.h"
+#include "../include/headers.h"
 
 #define DS32_MEASURE_TIME        0
 #define DS32_MEASURE_TEMPERATURE 1
 
 #define DS32_ADDRESS 0x68
 
-int initial_seconds;
-char formatted_time[32];
-long experiment_start_time;
-
-Sensor * init_ds32(Sensor * proto);
-
-void set_time_ds32(Sensor * ds32);
-
-#endif
+extern int  initial_seconds;
+extern char formatted_time[32];
+extern long experiment_start_time;

@@ -1,17 +1,16 @@
-compiler/system/i2c.o: system/i2c.c system/clock.h system/color.h \
- system/../structures/hashmap.h system/../structures/list.h \
- system/../structures/../types/thread-types.h system/i2c.h \
- system/../sensors/sensor.h system/../sensors/../math/units.h \
- system/../sensors/../math/../sensors/sensor.h \
- system/../sensors/../math/../structures/list.h \
- system/../sensors/../structures/list.h system/../sensors/../system/i2c.h \
- system/../sensors/../system/one.h \
- system/../sensors/../system/../sensors/sensor.h \
- system/../sensors/../system/../structures/list.h \
- system/../sensors/../system/../types/types.h \
- system/../sensors/../system/../types/thread-types.h \
- system/../sensors/../system/state.h system/../sensors/../types/types.h \
- system/../structures/list.h system/../types/types.h \
- system/../types/thread-types.h system/../.origin/origin.h \
- system/../system/file.h system/../system/gpio.h \
- system/../system/../sensors/sensor.h
+compiler/system/i2c.o: system/i2c.c system/../include/program.h \
+ system/../include/headers.h system/../include/../math/math.h \
+ system/../include/../math/units.h system/../include/../sensors/ad15.h \
+ system/../include/../sensors/adxl.h system/../include/../sensors/ds18.h \
+ system/../include/../sensors/sensor.h \
+ system/../include/../sensors/../system/one.h \
+ system/../include/../sensors/ds32.h system/../include/../sensors/mcp9.h \
+ system/../include/../sensors/test.h \
+ system/../include/../structures/hashmap.h \
+ system/../include/../structures/list.h \
+ system/../include/../structures/selector.h \
+ system/../include/../system/color.h \
+ system/../include/../system/compiler.h \
+ system/../include/../system/error.h system/../include/../system/gpio.h \
+ system/../include/../system/i2c.h system/../include/../system/state.h \
+ system/../include/../.origin/origin.h

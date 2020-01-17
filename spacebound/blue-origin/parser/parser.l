@@ -31,6 +31,8 @@ state     { return STATE;  }
 State     { return STATE;  }
 after     { return AFTER;  }
 define    { return DEFINE; }
+sensor    { return SENSOR; }
+Sensor    { return SENSOR; }
 
 (-|\+)?{digit}+{letter}+ {
   // note, units may never exceed 7 characters

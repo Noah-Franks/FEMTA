@@ -1,19 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <math.h>
 
-#include "ds32.h"
-#include "test.h"
+#include "../include/program.h"
 
-#include "../system/color.h"
-#include "../system/file.h"
-#include "../system/gpio.h"
-#include "../system/i2c.h"
-
-void free_test(Sensor * sensor);
-bool read_test(i2c_device * test_i2c);
+local void free_test(Sensor * sensor);
+local bool read_test(i2c_device * test_i2c);
 
 Sensor * init_test(Sensor * test) {
   

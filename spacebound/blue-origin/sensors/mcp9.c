@@ -1,18 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
 
-#include "ds32.h"
-#include "mcp9.h"
+#include "../include/program.h"
 
-#include "../system/color.h"
-#include "../system/file.h"
-#include "../system/gpio.h"
-#include "../system/i2c.h"
-
-void free_mcp9(Sensor * sensor);
-bool read_mcp9(i2c_device * mcp9_i2c);
+local void free_mcp9(Sensor * sensor);
+local bool read_mcp9(i2c_device * mcp9_i2c);
 
 Sensor * init_mcp9(Sensor * mcp9) {
   

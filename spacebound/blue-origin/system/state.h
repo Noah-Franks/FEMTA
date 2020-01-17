@@ -1,7 +1,6 @@
-#ifndef HEADER_GAURD_STATE
-#define HEADER_GAURD_STATE
+#pragma once
 
-#include <stdbool.h>
+#include "../include/headers.h"
 
 typedef struct Transition {
   
@@ -18,24 +17,4 @@ typedef struct StateDelay {
   
 } StateDelay;
 
-Hashmap * state_delays;
-
-void init_states();
-void drop_states();
-void print_all_states();
-
-void add_state(char * state, bool entered);
-bool state_exists(char * state);
-
-void enter_state(char * state);
-void leave_state(char * state);
-
-void enter(Transition * trans);
-void leave(Transition * trans);
-
-bool state_get(char * state);
-
-Transition * transition_create(char * state, int delay);
-void state_inform_delays(char * state);
-
-#endif
+extern Hashmap * state_delays;

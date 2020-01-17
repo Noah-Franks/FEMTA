@@ -1,16 +1,7 @@
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pigpio.h>
+#include "../include/program.h"
 
-#include "gpio.h"
-#include "color.h"
-
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-
-Pin pins[28];
+local Pin pins[28];
 
 void init_pins() {
   
@@ -46,7 +37,6 @@ void pin_set(char broadcom, bool hot) {
     
     if (hot) fprintf(schedule -> control_log, "%f%s\twire\t%d\thot\n", time_passed(), time_unit, broadcom);
     else     fprintf(schedule -> control_log, "%f%s\twire\t%d\tcold\n", time_passed(), time_unit, broadcom);
-    
   }
 }
 

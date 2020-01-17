@@ -1,21 +1,5 @@
 
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <pigpio.h>
-
-#include "ad15.h"
-#include "ds32.h"
-#include "sensor.h"
-
-#include "../.origin/origin.h"
-#include "../math/units.h"
-#include "../system/color.h"
-#include "../system/file.h"
-#include "../system/gpio.h"
-#include "../system/i2c.h"
-
+#include "../include/program.h"
 
 // information regarding this can be found pages 18-19 of the datasheet
 // more options exist in the datasheet, but this should cover most needs
@@ -66,9 +50,9 @@
 #define AD15_QUE_ASSERT_FOUR        0b10     // assert comparator after four conversions
 #define AD15_QUE_DISABLE            0b11     // disable comparator
 
-void free_ad15(Sensor * ad15);
-bool read_ad15(i2c_device * ad15_i2c);
-void configure_ad15(Sensor * ad15);
+local void free_ad15(Sensor * ad15);
+local bool read_ad15(i2c_device * ad15_i2c);
+local void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
   

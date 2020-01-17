@@ -1,61 +1,44 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <pigpio.h>
-
-#include "units.h"
-#include "mathematics.h"
-
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-#include "../structures/hashmap.h"
-#include "../system/color.h"
-#include "../system/compiler.h"
-#include "../system/error.h"
-
-extern void yyerror(char * message);
-
-Hashmap * conversions;
-Hashmap * unit_types;
-List    * all_units;
+#include "../include/program.h"
 
 #define take(FROM, TO) convert##_##FROM##_##TO
 #define arrow(FROM, TO) #FROM "->" #TO
 
 // temperature
-float take(   C,    K) (float x) { return x + 273.15f;                           }
-float take(   K,    C) (float x) { return x - 273.15f;                           }
-float take(   F,    C) (float x) { return x * (9.0f / 5.0f) + 32.0f;             }
-float take(   C,    F) (float x) { return (x - 32.0f) * (5.0f / 9.0f);           }
-float take(   K,    F) (float x) { return (x - 273.15f) * (9.0f / 5.0f) + 32.0f; }
-float take(   F,    K) (float x) { return (x - 32.0f) * (5.0f / 9.0f) + 273.15f; }
+local float take(   C,    K) (float x) { return x + 273.15f;                           }
+local float take(   K,    C) (float x) { return x - 273.15f;                           }
+local float take(   F,    C) (float x) { return x * (9.0f / 5.0f) + 32.0f;             }
+local float take(   C,    F) (float x) { return (x - 32.0f) * (5.0f / 9.0f);           }
+local float take(   K,    F) (float x) { return (x - 273.15f) * (9.0f / 5.0f) + 32.0f; }
+local float take(   F,    K) (float x) { return (x - 32.0f) * (5.0f / 9.0f) + 273.15f; }
 
 // pressure
-float take( atm,  kPa) (float x) { return x * 101.325f;                          }
-float take( kPa,  atm) (float x) { return x / 101.325f;                          }
-float take( atm, torr) (float x) { return x * 760.0f;                            }
-float take(torr,  atm) (float x) { return x / 760.0f;                            }
-float take( kPa, torr) (float x) { return x * 7.50062f;                          }
-float take(torr,  kPa) (float x) { return x / 7.50062f;                          }
+local float take( atm,  kPa) (float x) { return x * 101.325f;                          }
+local float take( kPa,  atm) (float x) { return x / 101.325f;                          }
+local float take( atm, torr) (float x) { return x * 760.0f;                            }
+local float take(torr,  atm) (float x) { return x / 760.0f;                            }
+local float take( kPa, torr) (float x) { return x * 7.50062f;                          }
+local float take(torr,  kPa) (float x) { return x / 7.50062f;                          }
 
 // voltage
-float take(   V,   mV) (float x) { return x * 1000.0f;                           }
-float take(  mV,    V) (float x) { return x / 1000.0f;                           }
+local float take(   V,   mV) (float x) { return x * 1000.0f;                           }
+local float take(  mV,    V) (float x) { return x / 1000.0f;                           }
 
 // time
-float take(   s,   ms) (float x) { return x * 1000.0f;                           }
-float take(  ms,    s) (float x) { return x / 1000.0f;                           }
-float take(   s,  min) (float x) { return x / 60.0f;                             }
-float take( min,    s) (float x) { return x * 60.0f;                             }
-float take(  ms,  min) (float x) { return x / 60000.0f;                          }
-float take( min,   ms) (float x) { return x * 60000.0f;                          }
+local float take(   s,   ms) (float x) { return x * 1000.0f;                           }
+local float take(  ms,    s) (float x) { return x / 1000.0f;                           }
+local float take(   s,  min) (float x) { return x / 60.0f;                             }
+local float take( min,    s) (float x) { return x * 60.0f;                             }
+local float take(  ms,  min) (float x) { return x / 60000.0f;                          }
+local float take( min,   ms) (float x) { return x * 60000.0f;                          }
 
+local Hashmap * conversions;
+local Hashmap * unit_types;
+local List    * all_units;
 
-// utilities
-float convert_identity (float x)  { return x;                                    }
-
+float convert_identity (float x)  { 
+  return x;
+}
 
 void init_units() {
   

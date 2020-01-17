@@ -1,7 +1,7 @@
 
 define enter start;
 
-test 1Hz {
+Sensor test 1Hz {
   [calibrate   | zero    , poly, raw, K   |    1.0, 8.0];
   [calibrate   | identity, poly, raw, min |    1.0, 1.0];
   [calibrate   | sine    , poly, raw, kPa |    8.0, 0.0];
@@ -26,7 +26,7 @@ test 1Hz {
 }
 
 
-/*ds32 1Hz {
+/*Sensor ds32 1Hz {
   [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0]
-    [conversions | Time, raw, s       |                  ]
-    }*/
+  [conversions | Time, raw, s       |                  ]
+}*/

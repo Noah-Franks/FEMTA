@@ -1,11 +1,8 @@
 
-#include <time.h>
-
-#include "clock.h"
-
+#include "../include/program.h"
 
 void real_sleep(time_t seconds) {
-
+  
   struct timespec time_period;
   time_period.tv_sec  = seconds;
   time_period.tv_nsec = 0;
