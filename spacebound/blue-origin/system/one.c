@@ -12,10 +12,9 @@ one_device * create_one_device(Sensor * sensor, char * path, char * log_path, on
   one -> log    = safe_open(log_path, "a");
   one -> read   = read;
   
-  if (!one -> log) {
-    printf(RED "Critical: could not open %d's log file %s\n" RESET, sensor -> name, log_path);
-    exit(1);
-  }
+  if (!one -> log)
+    exit_printing(ERROR_OPERATING_SYSTEM,
+                  "Critical: could not open %d's log file %s\n", sensor -> name, log_path);
   
   one -> hertz             = sensor -> hertz;
   one -> hertz_denominator = sensor -> hertz_denominator;
@@ -88,7 +87,7 @@ local void * one_main() {
   
   FILE * one_log = safe_open("logs/one.log", "a");
   fprintf(one_log, GRAY "Read duration [ns]\n" RESET);
-
+  
   long last_read_duration = 0;    // tracks time taken to read 1-wire bus
   
   long one_interval = schedule -> one_interval;

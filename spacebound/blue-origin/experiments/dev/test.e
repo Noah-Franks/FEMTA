@@ -1,5 +1,7 @@
 
 define enter start;
+define leave other;
+define leave never;
 
 Sensor test 1Hz {
   [calibrate   | zero    , poly, raw, K   |    1.0, 8.0];
@@ -21,7 +23,13 @@ Sensor test 1Hz {
   
   if (State start | zero > 0K | forever) {
       leave start;
+      
       enter start after 4s;
+      enter other after 4s;
+      enter never after 6s;    // never happens due to resetting
+      
+      set pin 7 neg;
+      set pin 7 pos after 2s;
   }
 }
 

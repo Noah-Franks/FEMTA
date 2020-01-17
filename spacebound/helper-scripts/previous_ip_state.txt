@@ -1,3 +1,0 @@
-Hi, I'm a Pi Zero and hope to be on a Blue Origin rocket.
-My favorite color is Blue. My favorite position on the cartesian plane is the origin. I hope saying that makes me more likely to be the unit that ends up on the actual craft.
-My IP address is: 10.192.84.62 

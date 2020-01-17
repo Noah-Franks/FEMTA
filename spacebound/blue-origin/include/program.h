@@ -14,7 +14,7 @@ extern  void   terminate_color  (void       );
 extern  char * get_color_by_name(char * name);
 
 // error.c (system)
-extern  void   exit_printing(int code, ...);
+extern  void   exit_printing(int code, ...) opt(noreturn);
 
 // file.c (system)
 extern  FILE * safe_open(char * path, char * mode);
@@ -94,14 +94,15 @@ extern  void       add_selector_command(Selector * selector,
                        char key, char * text, selector_action action, void * argument );
 
 // sensor.c (sensors)
-extern  float time_passed            (void                        );
-extern  void  init_sensors           (void                        );
-extern  void  start_sensors          (void                        );
-extern  void  terminate_sensors      (void                        );
-extern  void  sensor_process_triggers(Sensor * sensor             );
-extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file);
-extern  void  sensor_print_to_console(Sensor * sensor             );
-extern  void  flip_print             (void * nil, char * raw_text );
+extern  float time_passed            (void                         );
+extern  void  init_sensors           (void                         );
+extern  void  start_sensors          (void                         );
+extern  void  terminate_sensors      (void                         );
+extern  void  sensor_process_triggers(Sensor * sensor              );
+extern  void  sensor_log_header      (Sensor * sensor, char * color);
+extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file );
+extern  void  sensor_print_to_console(Sensor * sensor              );
+extern  void  flip_print             (void * nil, char * raw_text  );
 
 // sensors/*
 extern  Sensor * init_ad15(Sensor * proto, char * title, List * modes, List * names);
@@ -129,14 +130,14 @@ extern  void         state_inform_delays(char * state              );
 extern  void            init_units                     (void                               );
 extern  void            drop_units                     (void                               );
 extern  void            print_units_supported          (void                               );
-extern  bool            unit_is_supported              (char * unit_name                   );
-extern  bool            unit_is_supported              (char * unit_name                   );
-extern  bool            unit_is_of_type                (Numeric * numeric, char * type_name);
+extern  bool            unit_is_supported              (char * unit_name                   ) opt(pure);
+extern  bool            unit_is_supported              (char * unit_name                   ) opt(pure);
+extern  bool            unit_is_of_type                (Numeric * numeric, char * type_name) opt(pure);
 extern  Numeric *       numeric_from_decimal           (float decimal                      );
 extern  Numeric *       numeric_from_integer           (float integer                      );
-extern  Conversion      get_universal_conversion       (char * from, char * to             );
+extern  Conversion      get_universal_conversion       (char * from, char * to             ) opt(pure);
 extern  SeriesElement * series_element_from_conversion (Conversion conversion              );
 extern  SeriesElement * series_element_from_calibration(Calibration * calibration          );
 extern  float           series_compute                 (List * series, float x             );
 extern  void            series_destroy                 (List * series                      );
-extern  float           convert_identity               (float x                            );
+extern  float           convert_identity               (float x                            ) opt(const);

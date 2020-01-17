@@ -203,7 +203,7 @@ static void represent_as_integer(Numeric * numeric) {
     numeric -> integer    = (int) numeric -> decimal;
     numeric -> is_decimal = false;
     
-    if (!strcmp(numeric -> units, "f"))    // change generic unit if needed
+    if (!strcmp(numeric -> units, "f"))      // change generic unit if needed
         numeric -> units[0] = 'i';           // -----------------------------
 }
 

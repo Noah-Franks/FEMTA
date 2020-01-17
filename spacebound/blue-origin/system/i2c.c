@@ -170,11 +170,9 @@ void terminate_i2c() {
   // frees everything associated with the i2c system
   
   list_destroy(schedule -> i2c_devices);      // note that this kills
-  
-  free(schedule -> i2c_thread);
-  
   schedule -> i2c_devices = NULL;
-  schedule -> i2c_thread  = NULL;
+  
+  blank(schedule -> i2c_thread);
 }
 
 void * i2c_main() {
@@ -203,7 +201,7 @@ void * i2c_main() {
       
       //printf("DEBUG WIRE: %d " YELLOW "%d" RESET "\n", pin -> broadcom, pin -> ms_until_pulse_completes);
       
-      if (!pin -> ms_until_pulse_completes) continue;
+      when (pin -> ms_until_pulse_completes);
       
       pin -> ms_until_pulse_completes -= bus_interval_ms;
       
@@ -218,8 +216,8 @@ void * i2c_main() {
     for (iterate(state_delays -> all, StateDelay *, state_delay)) {
       
       //printf("DEBUG STATE: %s " CYAN "%d" RESET "\n", state_delay -> state, state_delay -> ms_remaining);
-      
-      if (!state_delay -> ms_remaining) continue;
+
+      when (state_delay -> ms_remaining);
       
       state_delay -> ms_remaining -= bus_interval_ms;
       

@@ -1,14 +1,11 @@
 
 #include "../include/program.h"
 
-local void free_ds18(Sensor * sensor);
 local bool read_ds18(one_device * ds18_one);
 
 Sensor * init_ds18(Sensor * ds18, char * path) {
   
   ds18 -> name = "DS18B20";
-  ds18 -> free = free_ds18;
-  
   ds18 -> one = create_one_device(ds18, path, "logs/ds18.log", read_ds18);
   
   Output * output = &ds18 -> outputs[DS18_MEASURE_TEMPERATURE];
@@ -66,8 +63,4 @@ bool read_ds18(one_device * ds18_one) {
   
   sensor_process_triggers(ds18);
   return true;
-}
-
-void free_ds18(Sensor * ds18) {
-  // Nothing special has to happen
 }

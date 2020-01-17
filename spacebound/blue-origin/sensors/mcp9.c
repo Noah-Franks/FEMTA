@@ -1,30 +1,18 @@
 
 #include "../include/program.h"
 
-local void free_mcp9(Sensor * sensor);
 local bool read_mcp9(i2c_device * mcp9_i2c);
 
 Sensor * init_mcp9(Sensor * mcp9) {
   
   mcp9 -> name = "MCP9808";
-  mcp9 -> free = free_mcp9;
-  
   mcp9 -> i2c = create_i2c_device(mcp9, read_mcp9);
   mcp9 -> i2c -> log = safe_open("logs/mcp9.log", "a");
   
   printf("logged in logs/mcp9.log\n");
   printf("An ambient thermometer\n\n");
   
-  
-  /* set up output data stream */
-  
-  Output * output = &mcp9 -> outputs[MCP9_MEASURE_TEMPERATURE];
-  
-  output -> enabled = true;
-  
-  fprintf(mcp9 -> i2c -> log, RED "\n\nMCP9\nStart time %s\nTime [%s]\tTemperature [%s]\n" RESET,
-	  formatted_time, time_unit, output -> unit);
-  
+  sensor_log_header(mcp9, RED);
   return mcp9;
 }
 
@@ -76,8 +64,4 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
   
   sensor_process_triggers(mcp9);
   return true;
-}
-
-void free_mcp9(Sensor * ds32) {
-  // Times out and resets after 25-35 ms of no change on SDA/SCL lines
 }

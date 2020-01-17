@@ -1,7 +1,6 @@
 
 #include "../include/program.h"
 
-local void free_ds32(Sensor * ds32);
 local bool read_ds32(i2c_device * ds32_i2c);
 local bool ds32_start_square_wave(i2c_device * ds32_i2c);
 local void set_time_ds32(Sensor * ds32);
@@ -17,8 +16,6 @@ void schedule_tick(int gpio, int level, uint32_t tick) {
 Sensor * init_ds32(Sensor * ds32) {
   
   ds32 -> name = "DS3231N";
-  ds32 -> free = free_ds32;
-  
   ds32 -> i2c = create_i2c_device(ds32, read_ds32);
   printf("logged in logs/ds32.log\n");
   printf("A real time clock\n\n");
@@ -174,8 +171,4 @@ void set_time_ds32(Sensor * ds32) {
   };
   
   i2c_write_bytes(ds32 -> i2c, 0x00, time, 7);
-}
-
-void free_ds32(Sensor * ds32) {
-  // nothing special
 }

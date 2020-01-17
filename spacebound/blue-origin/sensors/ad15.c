@@ -50,15 +50,12 @@
 #define AD15_QUE_ASSERT_FOUR        0b10     // assert comparator after four conversions
 #define AD15_QUE_DISABLE            0b11     // disable comparator
 
-local void free_ad15(Sensor * ad15);
 local bool read_ad15(i2c_device * ad15_i2c);
 local void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
   
   ad15 -> name = "ADS1115";
-  ad15 -> free = free_ad15;
-  
   ad15 -> i2c = create_i2c_device(ad15, read_ad15);
   
   char file_name[32];
@@ -227,8 +224,4 @@ bool read_ad15(i2c_device * ad15_i2c) {
   configure_ad15(ad15);
   
   return true;
-}
-
-void free_ad15(Sensor * ad15) {
-  // Nothing special has to happen
 }

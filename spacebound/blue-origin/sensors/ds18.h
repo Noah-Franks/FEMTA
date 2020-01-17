@@ -17,13 +17,9 @@
  *   Noah Franks
  */
 
-#include "sensor.h"
-
-#include "../system/one.h"
+#include "../include/headers.h"
 
 #define DS18_MEASURE_TEMPERATURE 0
-
-Sensor * init_ds18(Sensor * proto, char * path);
 
 #endif
 

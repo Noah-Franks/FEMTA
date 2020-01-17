@@ -6,16 +6,12 @@ const float adxl_bias_x =  0.0371;
 const float adxl_bias_y = -0.0010;
 const float adxl_bias_z = -0.0861;
 
-
-void free_adxl(Sensor * adxl);
-bool read_adxl(i2c_device * adxl_i2c);
+local bool read_adxl(i2c_device * adxl_i2c);
 
 Sensor * init_adxl(Sensor * adxl) {
   // proto was passed in, but we shall forever call it 'adxl' (by Sensor Invariant 0)
   
   adxl -> name = "ADXL345";
-  adxl -> free = free_adxl;
-  
   adxl -> i2c = create_i2c_device(adxl, read_adxl);
   printf("logged in logs/adxl.log\n");
   printf("An accelerometer\n\n");
@@ -59,8 +55,4 @@ bool read_adxl(i2c_device * adxl_i2c) {
   
   sensor_process_triggers(adxl); */
   return true;
-}
-
-void free_adxl(Sensor * adxl) {
-  // Nothing special has to happen
 }

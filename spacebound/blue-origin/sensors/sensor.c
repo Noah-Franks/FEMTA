@@ -2,6 +2,7 @@
 #include "../include/program.h"
 
 local void sensor_call_free(void *);
+local void sensor_do_nothing(Sensor * nil) { return; }
 
 Schedule * schedule;
 char     * time_unit;
@@ -22,7 +23,7 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
   
   proto -> print_code  = RESET;
   proto -> print_hertz = 5;
-  
+  proto -> free = sensor_do_nothing;
   
   // Check to see if the sensor produces data (possible by Invariant 1)
   if (targets && targets -> elements) {
@@ -85,7 +86,7 @@ void init_sensors() {
   
   hashmap_add(all_sensors, "adxl"    , sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds32"    , sensor_create("ds32", DS32_ADDRESS, ds32_tar, I2C_BUS));
-    hashmap_add(all_sensors, "ds18"    , sensor_create("ds18",            0, ds18_tar, ONE_BUS));
+  hashmap_add(all_sensors, "ds18"    , sensor_create("ds18",            0, ds18_tar, ONE_BUS));
   hashmap_add(all_sensors, "mcp9"    , sensor_create("mcp9", MCP9_ADDRESS, mcp9_tar, I2C_BUS));
   hashmap_add(all_sensors, "test"    , sensor_create("test", TEST_ADDRESS, test_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_gnd", sensor_create("ad15_gnd", AD15_GND, ad15_tar, I2C_BUS));
@@ -293,7 +294,7 @@ void sensor_call_free(void * vsensor) {
   
   for (int stream = 0; stream < sensor -> data_streams; stream++) {
     
-    if (!sensor -> outputs[stream].series) continue;
+    when (sensor -> outputs[stream].series);
     
     list_destroy(sensor -> outputs[stream].series);
     list_destroy(sensor -> outputs[stream].triggers);
@@ -322,6 +323,27 @@ void flip_print(void * nil, char * raw_text) {
   for (iterate(active_sensors, Sensor *, sensor))
     if (!strcmp(sensor -> code_name, raw_text + 2))
       sensor -> print = !sensor -> print;
+}
+
+void sensor_log_header(Sensor * sensor, char * color) {
+  /* the default log header for when an experiment starts */
+
+  FILE * file = NULL;
+  
+  if (sensor -> bus == I2C_BUS) file = sensor -> i2c -> log;
+  else                          file = sensor -> one -> log;
+  
+  fprintf(file, "\n\n%s%s\nStart time %s\n", color, sensor -> name, formatted_time);
+  fprintf(file, "Real Time [%s]\tOS Time [s]", time_unit);
+  
+  for (int i = 0; i < sensor -> data_streams; i++) {
+    
+    Output * output = &sensor -> outputs[i];
+    
+    fprintf(file, "\t%s [%s]", output -> name, output -> unit);
+  }
+  
+  fprintf(file, "\n" RESET);
 }
 
 void sensor_print_to_console(Sensor * sensor) {
@@ -363,7 +385,7 @@ void sensor_process_triggers(Sensor * sensor) {
     
     Output * output = &sensor -> outputs[stream];
     
-    if (!output -> enabled) continue;
+    when (output -> enabled);
     
     // apply smoothing before considering triggers
     output -> smoothed = 
@@ -390,8 +412,8 @@ void sensor_process_triggers(Sensor * sensor) {
       if ( trigger -> less && measure > threshold) continue;                       // means condition is not true
       if (!trigger -> less && measure < threshold) continue;                       // ---------------------------
       
-      for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge,  true);
-      for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, false);
+      for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge, false);
+      for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, true );
       
       for (iterate(trigger -> enter_set, Transition *, trans)) enter(trans);
       for (iterate(trigger -> leave_set, Transition *, trans)) leave(trans);
