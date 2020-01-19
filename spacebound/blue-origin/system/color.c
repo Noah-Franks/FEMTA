@@ -5,7 +5,7 @@ local Hashmap * colors_by_name;
 
 void init_color() {
   
-  colors_by_name = hashmap_create(hash_string, compare_strings, NULL, 16);
+  colors_by_name = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
   
   hashmap_add(colors_by_name, "red"    , RED    );
   hashmap_add(colors_by_name, "green"  , GREEN  );
@@ -15,10 +15,12 @@ void init_color() {
   hashmap_add(colors_by_name, "purple" , MAGENTA);
   hashmap_add(colors_by_name, "cyan"   , CYAN   );
   hashmap_add(colors_by_name, "gray"   , GRAY   );
+  hashmap_add(colors_by_name, "white"  , RESET  );
 }
 
-void terminate_color() {
-  hashmap_destroy(colors_by_name);
+void drop_color() {
+  hashmap_delete(colors_by_name);
+  colors_by_name = NULL;
 }
 
 char * get_color_by_name(char * name) {

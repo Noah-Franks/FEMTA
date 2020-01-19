@@ -68,10 +68,6 @@ typedef struct ListNode ListNode;
 // one.h (system)
 typedef struct one_device one_device;
 
-// selector.h (structure)
-typedef struct Command Command;
-typedef struct Selector Selector;
-
 // sensor.h (sensors)
 typedef struct Sensor Sensor;
 typedef struct Output Output;
@@ -93,26 +89,25 @@ typedef struct SeriesElement SeriesElement;
 // hashmap.h (structure)
 typedef int  (* hash_function  )(void *, int upper_bound   );
 typedef int  (* key_comparator )(void * first, void * other);
-typedef void (* element_freer  )(void * element            );
 typedef void (* element_printer)(HashmapElement * element  );
 
 // i2c.h (system)
 typedef bool (* i2c_reader)(i2c_device * i2c);
 
 // list.h (structure)
-typedef void (* ValueFree)(void *);
+typedef void (* freer)();
 
 // one.h (system)
 typedef bool (* one_reader)(one_device * one);
-
-// selector.h (structure)
-typedef void (* selector_action)(void *, char * raw_text);
 
 // sensor.h (sensors)
 typedef void (* sensor_free)(Sensor * sensor);
 
 // units.h (math)
 typedef float (* Conversion)(float value);
+
+// user.h (system)
+typedef void (* user_action)(void * arg, char * raw_text);
 
 
 #include "../math/math.h"
@@ -126,7 +121,6 @@ typedef float (* Conversion)(float value);
 #include "../sensors/test.h"
 #include "../structures/hashmap.h"
 #include "../structures/list.h"
-#include "../structures/selector.h"
 #include "../system/color.h"
 #include "../system/compiler.h"
 #include "../system/error.h"

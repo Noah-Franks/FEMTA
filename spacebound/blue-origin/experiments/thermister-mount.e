@@ -2,21 +2,23 @@
 define enter start;
 
 Sensor ad15_gnd 20Hz {
-  
-  if (State start | A0 < 20kPa) {
-    
-    // hfe valve
-    set pin 19 neg;
-    set pin 26 pos;
-    set pin 26 neg after 350ms;
+
+  /*if (State start | A0 < 20kPa) {
     
     // water valve
-    set pin 19 neg;
-    set pin 26 pos;
-    set pin 26 neg after 350ms;
-  }
-  
-  
+    set pin 26 neg;
+    set pin 19 pos;
+    set pin 19 neg after 350ms;
+    
+    // hfe valve
+    set pin 17 neg;
+    set pin  4 pos;
+    set pin  4 neg after 350ms;
+    
+    leave start;
+  }*/
+
+
   [calibrate | A0, poly, V, kPa |
       -0.00000805518095144006,
        0.000179617025688186,
@@ -44,7 +46,9 @@ Sensor ad15_gnd 20Hz {
 }
 
 Sensor ad15_vdd 20Hz {
+
   
+
   [calibrate | A2, poly, V, kPa |
       -0.00000805518095144006,
        0.000179617025688186,

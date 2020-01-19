@@ -56,8 +56,8 @@ bool read_ds18(one_device * ds18_one) {
   
   output -> measure = series_compute(output -> series, temperature);
   
-  if (ds18 -> print)
-    printf("ds18      %.5fs    %.5f%s\n", time_passed(), output -> measure, output -> unit);
+  /*if (ds18 -> print)
+    printf("ds18      %.5fs    %.5f%s\n", time_passed(), output -> measure, output -> unit);*/
   
   fprintf(ds18_one -> log, "%.5f\t%.5f\n", time_passed(), temperature);
   

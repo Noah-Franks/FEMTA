@@ -1,21 +1,19 @@
 
 #include "../include/program.h"
 
-Hashmap * state_delays;
+local Hashmap * states;    // maps state names to bools
 
-local Hashmap * states;    // maps string names to bools
+Hashmap * state_delays;    // maps 
 
 void init_states() {
-  states       = hashmap_create(hash_string, compare_strings, key_free, 16);
-  state_delays = hashmap_create(hash_string, compare_strings,     NULL, 16);    // value_free
+  states       = hashmap_create(hash_string, compare_strings, free, NULL, 16);
+  state_delays = hashmap_create(hash_string, compare_strings, NULL, free, 16);
 }
 
 void drop_states() {
-  hashmap_destroy(states);
-  states = NULL;
-  
-  hashmap_destroy(state_delays);
-  state_delays = NULL;
+  hashmap_delete(states);
+  hashmap_delete(state_delays);
+  state_delays = states = NULL;
 }
 
 void add_state(char * state, bool entered) {
@@ -47,7 +45,7 @@ void leave_state(char * state) {
 }
 
 void enter(Transition * trans) {
-
+  
   if (!trans -> delay) {
     enter_state(trans -> state);
     return;
@@ -86,7 +84,6 @@ void state_inform_delays(char * state) {
     hashmap_add(state_delays, state, state_delay);
   }
 }
-
 
 Transition * transition_create(char * state, int delay) {
   

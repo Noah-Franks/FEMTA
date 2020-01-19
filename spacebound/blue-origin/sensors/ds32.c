@@ -146,12 +146,6 @@ bool read_ds32(i2c_device * ds32_i2c) {
   time_output -> measure = series_compute(time_output -> series, n_interrupts);
   temp_output -> measure = series_compute(temp_output -> series, temperature );
   
-  if (ds32 -> print)
-    printf("%s%s      %.4f%s\t%.2f%s\t%s\n" RESET,
-	   ds32 -> print_code, ds32 -> code_name,
-	   time_output -> measure, time_output -> unit,
-	   temp_output -> measure, temp_output -> unit, formatted_time);
-  
   fprintf(ds32_i2c -> log, "%.4f\t%.2f\t%s\n", time_output -> measure, temp_output -> measure, formatted_time);
   
   sensor_process_triggers(ds32);

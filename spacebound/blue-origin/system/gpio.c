@@ -20,6 +20,11 @@ void init_pins() {
   gpioWrite(27, 0);
 }
 
+void drop_pins() {
+  list_delete(schedule -> pulse_pins);
+  schedule -> pulse_pins = NULL;
+}
+
 void pin_inform_delays(char broadcom) {
   // let system know this pin pulses
   

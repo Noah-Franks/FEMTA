@@ -1,12 +1,9 @@
 %option noyywrap
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <pigpio.h>
 
 #include "y.tab.h"
 
-void yyerror(char * message);
+void yyerror(char * format, ...);
 %}
 
 %option yylineno
@@ -99,8 +96,17 @@ Sensor    { return SENSOR; }
 
 %%
 
-void yyerror(char * message) {
-  printf("Line %d : %s\n", yylineno, message);
+void yyerror(char * format, ...) {
+  
+  va_list args;
+  va_start(args, format);
+  
+  printf(RED "Line %d : ", yylineno);
+  vprintf(format, args);
+  printf("\n" RESET);
+  
+  va_end(args);
+  
   gpioTerminate();
-  exit(3);
+  exit(ERROR_EXPERIMENTER);
 }

@@ -4,24 +4,23 @@
 
 typedef struct ListNode {
   
-  struct ListNode * next;
-  struct ListNode * prev;
+  struct ListNode * next;    // the node after this one
+  struct ListNode * prev;    // the node before this one
   
-  void * value;
+  void * value;              // the value contained
   
 } ListNode;
 
 typedef struct List {
   
-  ListNode * head;       // the head of the list (has a value)
-  ValueFree free;        // means by which nodes are free
+  ListNode * head;           // the head of the list (has a value)
+  freer      value_free;     // means by which nodes are free'd
   
-  int size;              // number of elements in the list
-
-  Mutex * lock;          // lock for when list is parallel
+  int size;                  // number of elements in the list
   
 } List;
 
+// repetition macros, which enables the compiler-optimizable list_get macro
 #define REP0(X)
 #define REP1(X) X
 #define REP2(X) REP1(X) X 
@@ -35,13 +34,18 @@ typedef struct List {
 #define REP(NUM, X) REP##NUM(X)
 #define list_get(LIST, NUM) LIST -> head REP(NUM, -> next) -> value
 
+/* iterates over the elements in a list.                                    *
+ * provides an index which can be used to count through the elements.       *
+ * exposes the list node so that you can modify the list while iterating.   *
+ * that's right, you can edit the list while iterating!                     *
+ * the TYPE can be any C type.                                              */
 #define iterate(LIST, TYPE, NAME)                                           \
   TYPE                                                                      \
   NAME             = (TYPE) *(int  *) &(LIST -> head),                      \
     * NAME##_node  =         (void *)  (LIST -> head),                      \
     * NAME##_index = 0;                                                     \
                                                                             \
-  (int) NAME##_index < (LIST -> size) &&				    \
+  (int) NAME##_index < (LIST -> size) &&                                    \
   ((NAME = (TYPE) *(int *) &((ListNode *) NAME##_node) -> value) || true);  \
                                                                             \
   NAME##_index   = ((void *) NAME##_index + 1),                             \

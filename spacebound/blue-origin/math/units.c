@@ -32,9 +32,9 @@ local float take( min,    s) (float x) { return x * 60.0f;                      
 local float take(  ms,  min) (float x) { return x / 60000.0f;                          }
 local float take( min,   ms) (float x) { return x * 60000.0f;                          }
 
-local Hashmap * conversions;
-local Hashmap * unit_types;
-local List    * all_units;
+local Hashmap * conversions;    // internally known, common conversions between units of the same type
+local Hashmap * unit_types;     // the type associated with each unit
+local List    * all_units;      // names for all the units known
 
 float convert_identity (float x)  { 
   return x;
@@ -42,8 +42,8 @@ float convert_identity (float x)  {
 
 void init_units() {
   
-  conversions = hashmap_create(hash_string, compare_strings, NULL, 16);
-  unit_types  = hashmap_create(hash_string, compare_strings, NULL, 16);
+  conversions = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
+  unit_types  = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
   
   hashmap_add(conversions, arrow(   C,    K), take(   C,    K));
   hashmap_add(conversions, arrow(   K,    C), take(   K,    C));
@@ -84,9 +84,11 @@ void init_units() {
 }
 
 void drop_units() {
-  hashmap_destroy(conversions);
-  hashmap_destroy(unit_types);
-  list_destroy(all_units);
+  hashmap_delete(conversions);
+  hashmap_delete(unit_types);
+  list_delete(all_units);
+  conversions = unit_types = NULL;
+  all_units = NULL;
 }
 
 bool unit_is_supported(char * unit_name) {
@@ -111,22 +113,21 @@ void print_units_supported() {
     ("Time\n"
      "   s   : system second\n"
      "  ms   : system milli-second\n"
-     " min   : system minute\n"
-     "\n"
+     " min   : system minute\n\n"
+     
      "Temperature\n"
      "  C    : Celcius\n"
      "  K    : Kelvin\n"
-     "  F    : Fahrenheit\n"
-     "\n"
+     "  F    : Fahrenheit\n\n"
+     
      "Pressure\n"
      "  atm  : Atmospheres\n"
      "  kPa  : kilo-Pascals\n"
-     "  torr : Torrecelli's unit\n"
-     "\n"
+     "  torr : Torrecelli's unit\n\n"
+     
      "Voltage\n"
      "   V   : Volts\n"
-     "  mV   : milli-Volts\n"
-     "\n"
+     "  mV   : milli-Volts\n\n"
      );
 }
 
@@ -172,14 +173,40 @@ SeriesElement * series_element_from_calibration(Calibration * calibration) {
   return element;
 }
 
+void series_element_delete(void * vSeriesElement) {
+  
+  SeriesElement * element = vSeriesElement;
+  
+  if (element -> universal) {   // conversion's are just function pointers
+    free(element);
+    return;
+  }
+  
+  calibration_delete(element -> calibration);
+  element -> calibration = NULL;
+  free(element);
+}
+
+void calibration_delete(void * vCalibration) {
+  
+  Calibration * calibration = vCalibration;
+  
+  list_delete(calibration -> constants);
+  calibration -> constants = NULL;
+  
+  blank(calibration -> curve);
+  blank(calibration -> target);
+  blank(calibration -> unit_from);
+  blank(calibration -> unit_to);
+  free(calibration);
+}
 
 Conversion get_universal_conversion(char * from, char * to) {
-  /* yields the conversion from one unit to the other, assuming the conversion
-   * is the same across all domains. In other words, specific conversions related to
-   * calibrations on sensors won't be returned; only generic ones like Celcius to Fahrenheit */
+  // Yields a conversion, as defined by Attribute #1. Accordingly,
+  // all conversions take one unit to another of the same type.
   
   if (!strcmp(from, to))
-    return convert_identity;
+    return convert_identity;    // same unit before and after
   
   char lookup[16];
   sprintf(lookup, "%s->%s", from, to);
@@ -188,21 +215,18 @@ Conversion get_universal_conversion(char * from, char * to) {
   
   if (unlikely(conversion == NULL)) {
     print_units_supported();
-    printf("Unknown conversion %s -> %s\n", from, to);
-    yyerror("Please use units from the table above\n");
-    gpioTerminate();
-    exit(ERROR_EXPERIMENTER);
+    printf(RED "Unknown conversion %s -> %s\n" RESET, from, to);
+    yyerror("Please use units from the table above");
   }
   
   return conversion;
 }
 
 static float compute_curve(float x, Calibration * calibration) {
+  // computes a calibration step, as defined by Attribute #1.
   
-  char * curve     = calibration -> curve;
-  List * constants = calibration -> constants;
-  
-  // a calibration consists of a curve name followed by constants
+  char * curve     = calibration -> curve;        // the shape of the function f(x)
+  List * constants = calibration -> constants;    // the constants used in f(x)
   
   if (!strcmp(curve, "poly")) {
     
@@ -232,15 +256,14 @@ static float compute_curve(float x, Calibration * calibration) {
     return 1.0f / (A + B * log_x + C * cube(log_x));
   }
   
-  printf(RED "Tried to evaluate unknown curve " CYAN "%s\n" RESET);
-  exit(ERROR_PROGRAMMER);
+  exit_printing(ERROR_PROGRAMMER, "Tried to evaluate unknown curve " CYAN "%s", curve);
 }
 
 float series_compute(List * series, float x) {
-  // compute a series of conversions to get a final value.
-  // the series may include universal conversions as well as sensor-specific ones.
+  // computes a series on x to yeild a final measure value, which may include
+  // universal conversions as well as sensor-specific calibrations, as per Attribute #1.
   
-  if (!series)    // the null series is defined to be the identity
+  if (!series)    // the null series is defined to be the identity series
     return x;
   
   for (iterate(series, SeriesElement *, step))

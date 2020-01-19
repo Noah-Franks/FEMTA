@@ -40,9 +40,6 @@ bool read_test(i2c_device * test_i2c) {
   
   /* process output streams */
   
-  if (test -> print)
-    sensor_print_to_console(test);
-  
   sensor_log_outputs(test, test_i2c -> log);
   sensor_process_triggers(test);
   return true;

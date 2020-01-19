@@ -10,7 +10,7 @@ extern  long   real_time_diff  (struct timespec * past);
 
 // color.c (system)
 extern  void   init_color       (void       );
-extern  void   terminate_color  (void       );
+extern  void   drop_color       (void       );
 extern  char * get_color_by_name(char * name);
 
 // error.c (system)
@@ -21,6 +21,7 @@ extern  FILE * safe_open(char * path, char * mode);
 
 // gpio.c (system)
 extern  void  init_pins        (void                        );
+extern  void  drop_pins        (void                        );
 extern  void  pin_set          (char broadcom, bool hot     );
 extern  void  pin_inform_delays(char broadcom               );
 extern  void  pin_set_hot      (void * nil, char * vbroadcom);
@@ -28,26 +29,26 @@ extern  void  pin_set_cold     (void * nil, char * vbroadcom);
 extern  void  fire             (Charge * charge, bool hot   );
 
 // hashmap.h (structure)
-extern  void      key_free          (void * element                          );
-extern  int       hash_string       (void *  string, int upper_bound         );    // (char *, int)
-extern  int       hash_address      (void * address, int upper_bound         );    // (void *, int)
-extern  int       compare_strings   (void * first, void * other              );    // (char *, char *)
-extern  int       compare_addresses (void * first, void * other              );    // (void *, void *)
-extern  void      print_hashmap_long(HashmapElement * element                );
-extern  void    * hashmap_get       (Hashmap * this, void * key              );
-extern  void      hashmap_add       (Hashmap * this, void * key, void * value);
-extern  void      hashmap_update    (Hashmap * this, void * key, void * value);
-extern  bool      hashmap_exists    (Hashmap * this, void * key              );
-extern  void      hashmap_remove    (Hashmap * this, void * key              );
-extern  void      hashmap_print     (Hashmap * this, element_printer print   );
-extern  void      hashmap_destroy   (Hashmap * this                          );
-extern  Hashmap * hashmap_create    (hash_function hash, key_comparator key_diff, 
-                                     element_freer freer, int expected_size);
+extern  void      key_free          (void * element                         );
+extern  int       hash_string       (void *  string, int upper_bound        );    // (char *, int)
+extern  int       hash_address      (void * address, int upper_bound        );    // (void *, int)
+extern  int       compare_strings   (void * first, void * other             );    // (char *, char *)
+extern  int       compare_addresses (void * first, void * other             );    // (void *, void *)
+extern  void      print_hashmap_long(HashmapElement * element               );
+extern  void    * hashmap_get       (Hashmap * map, void * key              );
+extern  void      hashmap_add       (Hashmap * map, void * key, void * value);
+extern  void      hashmap_update    (Hashmap * map, void * key, void * value);
+extern  bool      hashmap_exists    (Hashmap * map, void * key              );
+extern  void      hashmap_remove    (Hashmap * map, void * key              );
+extern  void      hashmap_print     (Hashmap * map, element_printer print   );
+extern  void      hashmap_delete    (Hashmap * map                          );
+extern  Hashmap * hashmap_create    (hash_function hash, key_comparator key_diff,
+                                     freer key_free, freer value_free, int size);
 
 // i2c.c (system)
 extern  void         init_i2c         (void                                            );
+extern  void         drop_i2c         (void                                            );
 extern  void         start_i2c        (void                                            );
-extern  void         terminate_i2c    (void                                            );
 extern  bool         i2c_write_byte   (i2c_device * dev, uint8 reg, uint8 value        );
 extern  bool         i2c_write_bytes  (i2c_device * dev, uint8 reg, uint8 * buf, char n);
 extern  bool         i2c_read_bytes   (i2c_device * dev, uint8 reg, uint8 * buf, char n);
@@ -60,48 +61,51 @@ extern  i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader       
 // list.c (structure)
 extern  List * list_create      (void                        );  // creates an empty list
 extern  List * list_from        (int vargs, ...              );  // creates a list pre-filled with elements
-extern  List * list_that_frees  (ValueFree freer             );  // creates an empty list that frees
+extern  List * list_that_frees  (freer value_free            );  // creates an empty list that frees
 extern  void   list_insert      (List * list, void * datum   );  // inserts a node at the end of the list
 extern  void   list_insert_first(List * list, void * datum   );  // inserts a node at the beginning of the list
+extern  void * list_retrieve    (List * list, int index      );  // gets the value of the node at the index in O(n)
 extern  void   list_remove      (List * list, ListNode * node);  // removes a node
 extern  void   list_concat      (List * first, List * other  );  // appends the second list to the end of the first
-extern  void   list_lock        (List * list                 );  // locks a parallel list
-extern  void   list_unlock      (List * list                 );  // unlocks a parallel list
 extern  void   list_empty       (List * list                 );  // removes all nodes in the list
-extern  void   list_destroy     (List * list                 );  // removes all nodes and frees the list itself
+extern  void   list_delete      (List * list                 );  // removes all nodes and frees the list itself
 
 // math.c (math)
 extern  int    gcd(int a, int b) opt(const);
 
+// memory.c (tests)
+extern  void * debug_malloc          (size_t size                             );
+extern  void * debug_calloc          (size_t nmemb, size_t size               );
+extern  char * debug_strdup          (const char * s                          );
+extern  void   debug_free            (void * pointer                          );
+extern  FILE * debug_fopen           (const char * pathname, const char * mode);
+extern  int    debug_fclose          (FILE * stream                           );
+extern  int    debug_yylex_destroy   (void                                    );
+extern  void   print_usage_debug_info(void                                    );
+
 // one.c (system)
 extern  void         init_one         (void                                                          );
+extern  void         drop_one         (void                                                          );
 extern  void         start_one        (void                                                          );
-extern  void         terminate_one    (void                                                          );
 extern  one_device * create_one_device(Sensor * sensor, char * path, char * log_path, one_reader read);
 extern  void         one_close        (one_device * one                                              );
 
-// parser.y (parser)
-extern  void   yyerror     (char * message);
-extern  int    yyparse     (void          );
-extern  void   print_config(void          );
+// parser.l (parser)
+extern  int    yylex_destroy(void          );
 
-// selector.c (structure)
-extern  Selector * create_selector     (Selector * parent                             );
-extern  void       execute_selector    (Selector * selector, char key, char * raw_text);
-extern  void       output_str          (void * nil, char * raw_text);
-extern  void       flip_bool           (void * pointer, char * raw_text);
-extern  void       add_selector_command(Selector * selector,
-                       char key, char * text, selector_action action, void * argument );
+// parser.y (parser)
+extern  void   yyerror      (char * format, ...);
+extern  int    yyparse      (void              );
+extern  void   print_config (void              );
 
 // sensor.c (sensors)
-extern  float time_passed            (void                         );
 extern  void  init_sensors           (void                         );
+extern  void  drop_sensors           (void                         );
 extern  void  start_sensors          (void                         );
-extern  void  terminate_sensors      (void                         );
+extern  float time_passed            (void                         );
 extern  void  sensor_process_triggers(Sensor * sensor              );
 extern  void  sensor_log_header      (Sensor * sensor, char * color);
 extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file );
-extern  void  sensor_print_to_console(Sensor * sensor              );
 extern  void  flip_print             (void * nil, char * raw_text  );
 
 // sensors/*
@@ -135,9 +139,26 @@ extern  bool            unit_is_supported              (char * unit_name        
 extern  bool            unit_is_of_type                (Numeric * numeric, char * type_name) opt(pure);
 extern  Numeric *       numeric_from_decimal           (float decimal                      );
 extern  Numeric *       numeric_from_integer           (float integer                      );
+extern  void            calibration_delete             (void * vCalibration                );
 extern  Conversion      get_universal_conversion       (char * from, char * to             ) opt(pure);
 extern  SeriesElement * series_element_from_conversion (Conversion conversion              );
 extern  SeriesElement * series_element_from_calibration(Calibration * calibration          );
+extern  void            series_element_delete          (void * vSeriesElement              );
 extern  float           series_compute                 (List * series, float x             );
-extern  void            series_destroy                 (List * series                      );
+extern  void            series_delete                  (List * series                      );
 extern  float           convert_identity               (float x                            ) opt(const);
+
+// user.c (system)
+extern  void  present_interface(void);
+
+#ifdef DEBUG_MODE
+#define malloc        debug_malloc
+#define calloc        debug_calloc
+#define strdup        debug_strdup
+#define free          debug_free
+#define fopen         debug_fopen
+#define fclose        debug_fclose
+#define yyclean       debug_yylex_destroy
+#else
+#define yyclean       yylex_destroy          // yylex_destroy is a macro too
+#endif

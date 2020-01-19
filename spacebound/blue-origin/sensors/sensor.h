@@ -1,16 +1,19 @@
 #pragma once
 
 /**
- * @Invariant_0 A sensor shall always be called "proto" until it is initialized.
+ * @Invariant #0 A sensor shall always be called "proto" until it is initialized.
  * Hence, all sensor initialization functions are "pass-through" since one may
  * never refer to an initialized sensor through a pointer called "proto".
- * Moreover, one never refers to a "ds32" until it in its "proto" form has been
+ * Moreover, one never refers to a "ds32" until its "proto" form has been
  * initialized.
  * 
- * @Invariant_1 If a sensor produces data, structures must exist for triggers
+ * @Invariant #1 If a sensor produces data, structures must exist for triggers
  * 
- * @Invariant_2 After parsing completes, all triggers are in the same units that
+ * @Invariant #2 After parsing completes, all triggers are in the same units that
  * output streams and log files use.
+ * 
+ * @Attribute #0 Sensors data production is organized into streams, which
+ * are series of values over time on which triggers may act.
  */
 
 #include "../include/headers.h"
@@ -49,6 +52,9 @@ typedef struct Output {
   char * unit;            // final unit for logging and triggers
   float  regressive;      // smoothing constant
   bool   enabled;         // whether output is enabled
+  bool   print;           // whether measures should be printed
+  char * print_code;      // color to use while printing
+  int    print_places;    // number of decimal places to use when printing
   
 } Output;
 
@@ -57,8 +63,6 @@ typedef struct Sensor {
   char * name;              // component name
   char * code_name;         // abbreviated name
   bool   print;             // whether sensor prints
-  char * print_code;        // color to use while printing
-  int    print_hertz;       // frequency for printing
   
   union {
     i2c_device * i2c;       // i2c communications info
@@ -70,7 +74,7 @@ typedef struct Sensor {
   Output * outputs;         // everything this sensor produces
   Hashmap * targets;        // that which can be triggered (target str -> stream_index)
   
-  sensor_free free;         // how to free sensor
+  sensor_free teardown;     // how to free sensor
   
   
   int hertz;                 // bus communication frequency in hertz
@@ -99,6 +103,8 @@ typedef struct Schedule {
   
   bool i2c_active;             // whether experiment uses i2c
   bool one_active;             // whether experiment uses 1-wire
+  
+  bool print_sensors;          // whether any sensors print to the console
   
   int   interrupts;            // interrupts since schedule creation
   float interrupt_interval;    // time between each interrupt

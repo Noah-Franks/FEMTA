@@ -125,8 +125,6 @@ bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
 
 void i2c_close(i2c_device * i2c) {
   // closes and frees the i2c device
-  fclose(schedule -> i2c_error_log);
-  fclose(schedule -> control_log);    // change if not i2c-bound
   fclose(i2c -> log);
   
   // only close i2c addresses once
@@ -153,26 +151,49 @@ void init_i2c() {
   fprintf(schedule -> i2c_error_log, RED  "Time\tType\tRegister\tBytes\n"  RESET);
 }
 
+void drop_i2c() {
+  // frees everything associated with the i2c system
+  
+  list_delete(schedule -> i2c_devices);      // note that this kills
+  schedule -> i2c_devices = NULL;
+  
+  blank(schedule -> i2c_thread);
+  
+  fclose(schedule -> i2c_error_log);
+  fclose(schedule -> control_log);    // change if not i2c-bound
+}
+
 void start_i2c() {
   
   if (!schedule -> i2c_active) return;
   
-  printf("\nStarting i2c schedule with " MAGENTA "%d " RESET "events\n", schedule -> i2c_devices -> size);
+  printf("\nStarting i2c schedule with " MAGENTA "%d " RESET "events\n\n", schedule -> i2c_devices -> size);
+  
+  if (schedule -> print_sensors) {
+    
+    printf(GREY "Time     ");
+    
+    for (iterate(active_sensors, Sensor *, sensor)) {
+      if (sensor -> print) {
+        for (int stream = 0; stream < sensor -> data_streams; stream++) {
+          
+          Output * output = &sensor -> outputs[stream];
+          
+          when (output -> print);
+          
+          printf("%s%-*s", output -> print_code, 5 + output -> print_places + strlen(output -> unit), output -> name);
+        }
+      }
+    }
+    
+    printf("\n" RESET);
+  }
   
   // create i2c thread
   if (pthread_create(schedule -> i2c_thread, NULL, i2c_main, NULL)) {
     printf(RED "Could not start i2c thread\n" RESET);
     return;
   }
-}
-
-void terminate_i2c() {
-  // frees everything associated with the i2c system
-  
-  list_destroy(schedule -> i2c_devices);      // note that this kills
-  schedule -> i2c_devices = NULL;
-  
-  blank(schedule -> i2c_thread);
 }
 
 void * i2c_main() {
@@ -206,25 +227,25 @@ void * i2c_main() {
       pin -> ms_until_pulse_completes -= bus_interval_ms;
       
       if (pin -> ms_until_pulse_completes <= 0) {
-	pin_set(pin -> broadcom, pin -> pulse_final_state);
-	pin -> ms_until_pulse_completes = 0;
+        pin_set(pin -> broadcom, pin -> pulse_final_state);
+        pin -> ms_until_pulse_completes = 0;
       }
     }
-
-
+    
+    
     // change states
     for (iterate(state_delays -> all, StateDelay *, state_delay)) {
       
       //printf("DEBUG STATE: %s " CYAN "%d" RESET "\n", state_delay -> state, state_delay -> ms_remaining);
-
+      
       when (state_delay -> ms_remaining);
       
       state_delay -> ms_remaining -= bus_interval_ms;
       
       if (state_delay -> ms_remaining <= 0) {
-	if (state_delay -> entering) enter_state(state_delay -> state);
-	else                         leave_state(state_delay -> state);
-	state_delay -> ms_remaining = 0;
+        if (state_delay -> entering) enter_state(state_delay -> state);
+        else                         leave_state(state_delay -> state);
+        state_delay -> ms_remaining = 0;
       }
       
     }
@@ -235,13 +256,37 @@ void * i2c_main() {
       i2c -> count += bus_interval_ms;
       
       if (i2c -> count == (i2c -> interval) * (i2c -> hertz_denominator) || i2c -> reading) {
-	
-	(i2c -> read)(i2c);
-	
-	i2c -> count = 0;
+        
+        (i2c -> read)(i2c);
+        
+        i2c -> count = 0;
       }
-    }    
+    }
     
+    // print to console
+    if (schedule -> print_sensors) {
+      
+      printf(GREY "%.3lf%s  ", time_passed(), time_unit);
+      
+      for (iterate(active_sensors, Sensor *, sensor)) {
+        
+        when (sensor -> print);
+        
+        for (int stream = 0; stream < sensor -> data_streams; stream++) {
+          
+          Output * output = &sensor -> outputs[stream];
+          
+          when (output -> print);
+          
+          if (output -> measure >= 0)
+            printf(" ");
+          
+          printf("%s%.*f%s  ", output -> print_code, output -> print_places, output -> measure, output -> unit);
+        }
+      }
+      
+      printf("\n" RESET);
+    }
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);

@@ -1,105 +1,71 @@
 
 #include "../include/program.h"
-//#include "../parser/y.tab.h"
+
+extern FILE * yyin;
 
 bool console_error_messages = true;
+bool use_real_time_clock    = true;
+bool print_to_console       = true;
+bool allow_user_input       = true;
 
-FILE * yyin;
-
-local void parse_args(int, char **);
 
 int main(int nargs, char ** args) {
   
   time_start_os = time(NULL);    // OS time when system started
   //clock_gettime(CLOCK_REALTIME, &time_start_os);
   
-  // start pigpio library
   if (gpioInitialise() < 0)
     exit_printing(ERROR_OPERATING_SYSTEM, "pigpio unable to start");
   
+  if (nargs == 1) exit_printing(ERROR_EXPERIMENTER, "Please supply an experiment to run");
+  else            printf("Parsing experiment file %s\n", args[1]);
+  
+  if (!(yyin = fopen(args[1], "r")))
+    exit_printing(ERROR_EXPERIMENTER, "Experiment file %s does not exist", args[1]);
+  
+  
   schedule = calloc(1, sizeof(*schedule));
   
-  init_color();      // init colorized printing to the console
-  init_units();      // init unit conversion structures
-  init_pins();       // set up gpio data structure
-  init_states();
-  init_one();        // set up the 1-wire data structures
-  init_i2c();        // set up the i2c data structures
-  init_sensors();    // set up sensor info and actions
+  init_color();       // set up colorized printing to the console
+  init_units();       // set up unit conversions and calibration structures
+  init_pins();        // set up gpio data structures
+  init_states();      // set up the state system and delay tracking info
+  init_one();         // set up the 1-wire data structures
+  init_i2c();         // set up the i2c data structures
+  init_sensors();     // set up sensor info and actions
   
-  parse_args(nargs, args);
-  print_config();
-  
-  //gpioTerminate(); exit(0);    // TEMP
+  yyparse();          // execute the Exp Compiler to transform this process into an experiment
+  yyclean();          // delete Exp's lexical analyzer's remaining stack and debris
+  print_config();     // print sensor, trigger, and state information to the experimenter
   
   start_sensors();
-  start_one();       // start reading the 1-wire bus
-  start_i2c();       // start reading the i2c bus
+  if (schedule -> i2c_active) start_i2c();       // start reading the i2c bus
+  if (schedule -> one_active) start_one();       // start reading the 1-wire bus
   
-  prctl(PR_SET_NAME, "Console", NULL, NULL, NULL);
+  if (allow_user_input)
+    present_interface();
   
-  Selector * selector = create_selector(NULL);
-  
-  add_selector_command(selector, 'q', NULL,    flip_bool,     &reading_user_input);
-  add_selector_command(selector, 'e', NULL,    flip_bool, &console_error_messages);
-  add_selector_command(selector, 'm', NULL,   output_str,                    NULL);
-  add_selector_command(selector, '+', NULL,  pin_set_hot,                    NULL);
-  add_selector_command(selector, '-', NULL, pin_set_cold,                    NULL);
-  add_selector_command(selector, 'p', NULL,   flip_print,                    NULL);
-  
-  reading_user_input = true;
-  
-  char input[32];
-  while (reading_user_input) {
-    fgets(input, 32, stdin);
-    
-    execute_selector(selector, input[0], input);
-  }
-  
-  // tell threads to terminate
-  schedule -> term_signal = true;
+  schedule -> term_signal = true;                // tell all child threads to terminate
   
   // join with threads
   if (schedule -> i2c_active) pthread_join(*schedule -> i2c_thread, NULL);
   if (schedule -> one_active) pthread_join(*schedule -> one_thread, NULL);
   
-  terminate_sensors();    // close and destroy all sensor-related structures
-  terminate_i2c();        // destroy i2c bus structures
-  terminate_one();        // destroy 1-wire bus structures
+  drop_sensors();     // close and destroy all sensor-related structures
+  drop_i2c();         // delete i2c bus structures
+  drop_one();         // delete 1-wire bus structures
+  drop_states();      // delete the state system
+  drop_pins();        // delete gpio structures
+  drop_units();       // delete unit structures
+  drop_color();       // delete color structures
   
-  list_destroy(schedule -> pulse_pins);
-  free(schedule);
+  gpioTerminate();    // terminate pigpio library
   
-  // terminate pigpio library
-  gpioTerminate();
+  blank(schedule);
   
-  drop_states();
-  drop_units();
-  terminate_color();
+  #ifdef DEBUG_MODE
+    print_usage_debug_info();
+  #endif
   
   return EXIT_SUCCESS;
-}
-
-void parse_args(int argc, char ** argv) {
-  
-  if (argc == 1) {
-    printf(RED "Please supply a file to run\n" RESET);
-    return;
-  }
-  
-  /* parse a file for specifications */
-  
-  char * filename = argv[1];
-  
-  printf("Parsing experiment file %s\n", filename);
-  
-  yyin = fopen(filename, "r");
-  
-  if (!yyin) {
-    printf(RED "Experiment file %s does not exist\n" RESET, filename);
-    exit(ERROR_EXPERIMENTER);
-  }
-  
-  yyparse();
-  return;
 }

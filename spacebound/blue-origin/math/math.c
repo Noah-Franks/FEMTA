@@ -1,9 +1,7 @@
 
-#include "../include/program.h"
-
 int gcd(int a, int b) {
-  /* returns greatest common divisor
-     algorithm adapted from Dr. Samuel Wagstaff */
+  // returns greatest common divisor, as adapted from Dr.
+  // Samuel Wagstaff's CS 355 course and discovered by Euclid.
   
   int g = a;
   int t = b;

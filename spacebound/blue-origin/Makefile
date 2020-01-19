@@ -4,7 +4,7 @@ ORIGIN_LINKS = -lpigpio -lpthread -lm
 PLOT_LINKS   = -lncurses
 TEST_LINKS   = -lpigpio -lpthread -lm
 #FLAGS =
-FLAGS = -g -Werror=return-type
+FLAGS = -g -Werror -Wreturn-type -Wuninitialized
 
 .DEFAULT_GOAL := origin
 

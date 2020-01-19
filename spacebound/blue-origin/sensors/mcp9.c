@@ -56,10 +56,6 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
   
   output -> measure = series_compute(output -> series, temperature);
   
-  if (mcp9 -> print)
-    printf("%s%s      %.5fs    %.4f%s\n",
-	   mcp9 -> print_code, mcp9 -> code_name, time_passed(), output -> measure, output -> unit);
-  
   fprintf(mcp9_i2c -> log, "%.5f\t%.5f\n", time_passed(), temperature);
   
   sensor_process_triggers(mcp9);

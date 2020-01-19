@@ -49,9 +49,15 @@ void init_one() {
   schedule -> one_thread  = malloc(sizeof(*schedule -> one_thread));
 }
 
-void start_one() {
+void drop_one() {
   
-  if (!schedule -> one_active) return;
+  list_delete(schedule -> one_devices);
+  schedule -> one_devices = NULL;
+  
+  blank(schedule -> one_thread);
+}
+
+void start_one() {
   
   printf("\nStarting 1-wire schedule with " MAGENTA "%d " RESET "events\n", schedule -> one_devices -> size);
   
@@ -60,16 +66,6 @@ void start_one() {
     printf(RED "Could not start 1-wire thread\n" RESET);
     return;
   }
-}
-
-void terminate_one() {
-  
-  list_destroy(schedule -> one_devices);
-  
-  free(schedule -> one_thread);
-  
-  schedule -> one_devices = NULL;
-  schedule -> one_thread  = NULL;
 }
 
 local void * one_main() {

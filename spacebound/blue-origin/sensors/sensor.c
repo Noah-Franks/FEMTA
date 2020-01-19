@@ -1,13 +1,14 @@
 
 #include "../include/program.h"
 
-local void sensor_call_free(void *);
+local void sensor_close(void *);
 local void sensor_do_nothing(Sensor * nil) { return; }
 
 Schedule * schedule;
 char     * time_unit;
 long       time_start_os;     // system start from the OS's perspective
 List     * active_sensors;    // every active sensor on craft
+List     * all_target_maps;   // all maps associating a target to its channels
 Hashmap  * all_sensors;       // every sensor that could be specified
 int        n_triggers;        // number of triggers
 
@@ -21,9 +22,7 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
   proto -> targets   = targets;
   proto -> bus       = bus;
   
-  proto -> print_code  = RESET;
-  proto -> print_hertz = 5;
-  proto -> free = sensor_do_nothing;
+  proto -> teardown  = sensor_do_nothing;
   
   // Check to see if the sensor produces data (possible by Invariant 1)
   if (targets && targets -> elements) {
@@ -43,6 +42,25 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
   return proto;
 }
 
+void sensor_delete(void * vsensor) {
+  
+  Sensor * sensor = vsensor;
+  
+  for (int stream = 0; stream < sensor -> data_streams; stream++) {
+    
+    if (sensor -> outputs[stream].series)
+      list_delete(sensor -> outputs[stream].series);
+    
+    if (sensor -> outputs[stream].triggers)
+      list_delete(sensor -> outputs[stream].triggers);
+    
+    blank(sensor -> outputs[stream].unit);
+  }
+  
+  blank(sensor -> outputs);
+  free(sensor);
+}
+
 void init_sensors() {
   
   n_triggers = 0;
@@ -50,14 +68,14 @@ void init_sensors() {
   sprintf(formatted_time, "[Clock not present! Defaulted to OS time!]");    // overwritten by clock
   time_unit = "s";                                                          // --------------------
   
-  all_sensors = hashmap_create(hash_string, compare_strings, NULL, 16);
+  all_sensors = hashmap_create(hash_string, compare_strings, NULL, sensor_delete, 16);
   
-  Hashmap * adxl_tar = hashmap_create(hash_string, compare_strings, NULL, 3);
-  Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, 6);
-  Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
-  Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
-  Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
-  Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, 5);
+  Hashmap * adxl_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 3);
+  Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 6);
+  Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
+  Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
+  Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
+  Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 5);
   
   hashmap_add(ds32_tar, "Time"       , (void *) (int) DS32_MEASURE_TIME       );
   hashmap_add(ds32_tar, "Temperature", (void *) (int) DS32_MEASURE_TEMPERATURE);
@@ -93,6 +111,21 @@ void init_sensors() {
   hashmap_add(all_sensors, "ad15_vdd", sensor_create("ad15_vdd", AD15_VDD, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_sda", sensor_create("ad15_sda", AD15_SDA, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_scl", sensor_create("ad15_scl", AD15_SCL, ad15_tar, I2C_BUS));
+  
+  all_target_maps = list_from(6, adxl_tar, ad15_tar, ds32_tar, ds18_tar, mcp9_tar, test_tar);
+  all_target_maps -> value_free = hashmap_delete;
+}
+
+void drop_sensors() {
+  
+  list_delete(active_sensors);
+  active_sensors = NULL;
+  
+  hashmap_delete(all_sensors);
+  all_sensors = NULL;
+  
+  list_delete(all_target_maps);
+  all_target_maps = NULL;
 }
 
 void start_sensors() {
@@ -106,10 +139,9 @@ void start_sensors() {
     
     int interval = 1000 / proto -> hertz;
     
-    if (interval * proto -> hertz != 1000) {
-      printf(RED "\n1000ms is not cleanly divided by %s's %dHz\n\n" RESET, proto -> code_name, proto -> hertz);
-      exit(1);
-    }
+    if (interval * proto -> hertz != 1000)
+      exit_printing
+        (ERROR_EXPERIMENTER, "\n1000ms is not cleanly divided by %s's %dHz", proto -> code_name, proto -> hertz);
     
     switch (proto -> bus) {
       
@@ -158,7 +190,7 @@ void start_sensors() {
   schedule -> i2c_interval = i2c_divisor * 1E6;
   schedule -> one_interval = one_divisor * 1E6;
   
-  active_sensors = list_that_frees(sensor_call_free);
+  active_sensors = list_that_frees(sensor_close);
   
   
   
@@ -246,15 +278,15 @@ void start_sensors() {
 
   if (proto -> requested) {
     ad15[3] = init_ad15(proto, "Differentials",
-			list_from(4, A0, A1, A2, A3),
-			list_from(4, "Thermister 9", "Thermister 10", "Thermister 11", "Thermister 12"));
+                        list_from(4, A0, A1, A2, A3),
+                        list_from(4, "Thermister 9", "Thermister 10", "Thermister 11", "Thermister 12"));
     list_insert(active_sensors, ad15[3]);
   }
     
   for (int channel = 0; channel < 4; channel++)
     for (int sensor_index = 0; sensor_index < 4; sensor_index++)
       if (ad15[sensor_index])
-	list_insert(schedule -> i2c_devices, ad15[sensor_index] -> i2c);
+        list_insert(schedule -> i2c_devices, ad15[sensor_index] -> i2c);
   
   
   /* 1-wire sensors */
@@ -270,6 +302,17 @@ void start_sensors() {
     list_insert(active_sensors,          ds18       );
     list_insert(schedule -> one_devices, ds18 -> one);
   }
+  
+  
+  /* see if we can disable printing */
+  
+  bool some_sensor_prints = false;
+  
+  for (iterate(active_sensors, Sensor *, sensor))
+    if (sensor -> print)
+      some_sensor_prints = true;
+  
+  schedule -> print_sensors = some_sensor_prints && print_to_console;
 }
 
 float time_passed() {
@@ -279,38 +322,17 @@ float time_passed() {
   return (float) (time(NULL) - time_start_os);
 }
 
-void sensor_call_free(void * vsensor) {
+void sensor_close(void * vsensor) {
+  // closes an active sensor
   
   Sensor * sensor = vsensor;
   
   printf(YELLOW "Removing sensor %s\n" RESET, sensor -> name);
   
-  $(sensor, free);    // give opportunity for sensor-specific freeing
+  $(sensor, teardown);    // give opportunity for sensor-specific freeing
   
   if      (sensor -> bus == I2C_BUS) i2c_close(sensor -> i2c);
-  else if (sensor -> bus == ONE_BUS) one_close(sensor -> one);    
-  
-  //hashmap_destroy(sensor -> targets);
-  
-  for (int stream = 0; stream < sensor -> data_streams; stream++) {
-    
-    when (sensor -> outputs[stream].series);
-    
-    list_destroy(sensor -> outputs[stream].series);
-    list_destroy(sensor -> outputs[stream].triggers);
-    free(sensor -> outputs[stream].unit);
-  }
-  
-  if (sensor -> outputs)
-    free(sensor -> outputs);
-  free(sensor);
-}
-
-void terminate_sensors() {  
-  list_destroy(active_sensors);
-  hashmap_destroy(all_sensors);
-  active_sensors = NULL;
-  all_sensors = NULL;
+  else if (sensor -> bus == ONE_BUS) one_close(sensor -> one);
 }
 
 void flip_print(void * nil, char * raw_text) {
@@ -344,23 +366,6 @@ void sensor_log_header(Sensor * sensor, char * color) {
   }
   
   fprintf(file, "\n" RESET);
-}
-
-void sensor_print_to_console(Sensor * sensor) {
-  /* the default format for printing to the console */
-  
-  printf("%s%s     ", sensor -> print_code, sensor -> code_name);
-  printf("%.2f%s   %.2fs", time_passed(), time_unit, 0);
-  
-  for (int i = 0; i < sensor -> data_streams; i++) {
-    
-    Output * output = &sensor -> outputs[i];
-      
-    if (output -> measure >= 0) printf(" ");
-    printf("  %.3f%s", output -> measure, output -> unit);
-  }
-  
-  printf("\n");
 }
 
 void sensor_log_outputs(Sensor * sensor, FILE * file) {

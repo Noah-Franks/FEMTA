@@ -4,8 +4,8 @@
 
 typedef struct HashmapElement {
   
-  void * key;       // The key used to access this value
-  void * value;     // The content this element points to
+  void * key;                 // The key used to access this value
+  void * value;               // The content this element holds
   
 } HashmapElement;
 
@@ -16,11 +16,13 @@ typedef struct Hashmap {
   int size;                   // number of rows in the table
   
   List ** table;              // output values
-  List * all;                 // all values in table (bad after remove is called)
-  List * keys;                // all keys in table (bad after remove is called)
+  List *  all;                // all values in table    (do not use with remove!)
+  List *  keys;               // all keys in table      -------------------------
   
-  element_freer free;         // means of freeing hashmap element
-  hash_function hash;         // how hash table indecies are calculated
+  freer key_free;             // means of freeing hashmap element key
+  freer value_free;           // means of freeing hashmap element value
+  
+  hash_function  hash;        // how hash table indecies are calculated
   key_comparator key_diff;    // how to tell if keys match
   
 } Hashmap;

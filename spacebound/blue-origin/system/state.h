@@ -4,8 +4,8 @@
 
 typedef struct Transition {
   
-  char * state;    // the broadcom number of the pin
-  int    delay;    // used for delayed state changes
+  char * state;           // the broadcom number of the pin
+  int    delay;           // used for delayed state changes
   
 } Transition;
 

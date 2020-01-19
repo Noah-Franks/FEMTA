@@ -157,13 +157,6 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   AD15_Config * config = ad15 -> data;
   
-  bool should_print = false;
-  
-  if (ad15_i2c -> hertz >= 5)
-    should_print = (ad15 -> print) && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz));
-  else
-    should_print = (ad15 -> print) && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz                      ));
-  
   ad15_i2c -> reading = true;    // this sensor does partial reads
   
   
@@ -179,29 +172,18 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   // log and print
   Output * output = &ad15 -> outputs[config -> mode_cycle];
-
+  
   output -> measure = series_compute(output -> series, (float) counts);
   
   
-  if (config -> current_mode == config -> modes -> head) {
-    // must be on first node
-    
-    if (should_print)
-      printf("%s%s  %lf%s\t", ad15 -> print_code, ad15 -> code_name, time_passed(), time_unit);
+  if (config -> current_mode == config -> modes -> head)    // must be on first node
     fprintf(ad15_i2c -> log, "%lf\t", time_passed());
-  }
   
   fprintf(ad15_i2c -> log, "%lf\t", output -> measure);
-  
-  if (should_print) {
-    if (output -> measure >= 0.0) printf(" ");
-    printf("%.9lf%s\t", output -> measure, output -> unit);
-  }
   
   if (config -> current_mode == config -> modes -> head -> prev) {
     // must be on last mode
     
-    if (should_print) printf("\n" RESET);
     fprintf(ad15_i2c -> log, "\n");
     
     ad15_i2c -> reading = false;
