@@ -10,7 +10,15 @@ void real_sleep(time_t seconds) {
   clock_nanosleep(CLOCK_REALTIME, 0, &time_period, NULL);
 }
 
-void real_nano_sleep(long ns) {
+void milli_sleep(long ms) {
+  nano_sleep(ms * 1000000l);
+}
+
+void micro_sleep(long us) {
+  nano_sleep(us * 1000l);
+}
+
+void nano_sleep(long ns) {
 
   struct timespec time_period;
   time_period.tv_sec  = 0;
@@ -18,11 +26,6 @@ void real_nano_sleep(long ns) {
 
   clock_nanosleep(CLOCK_REALTIME, 0, &time_period, NULL);
 }
-
-void real_milli_sleep(long ms) {
-  real_nano_sleep(ms * 1E6);
-}
-
 
 long real_time_diff(struct timespec * past) {
   

@@ -51,11 +51,13 @@
 #define AD15_QUE_DISABLE            0b11     // disable comparator
 
 local bool read_ad15(i2c_device * ad15_i2c);
+local void free_ad15(Sensor * ad15);
 local void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
   
   ad15 -> name = "ADS1115";
+  ad15 -> teardown = free_ad15;
   ad15 -> i2c = create_i2c_device(ad15, read_ad15);
   
   char file_name[32];
@@ -114,7 +116,8 @@ Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
   sensor_config -> COMP_MODE = AD15_COMP_TRADITIONAL;
   sensor_config -> DATA_RATE = AD15_RATE_860HZ;
   
-  sensor_config -> MODE      = AD15_MODE_CONTINUOUS;
+  //sensor_config -> MODE      = AD15_MODE_CONTINUOUS;
+  sensor_config -> MODE      = AD15_MODE_LOW_POWER;
   sensor_config -> PGA       = AD15_PGA_6144V;
   sensor_config -> MUX       = AD15_MUX_SINGLE_AIN0;
   sensor_config -> OS        = AD15_OS_BEGIN_CONVERSION;
@@ -205,5 +208,11 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   configure_ad15(ad15);
   
+  micro_sleep(1200);
+  
   return true;
+}
+
+void free_ad15(Sensor * ad15) {
+  blank(ad15 -> data);
 }

@@ -59,10 +59,10 @@ void print_usage_debug_info() {
   if (file_opens == file_closes) printf(GREEN "    Disk   Success: ");
   else                           printf(  RED "    Disk   Failure: ");
   
-  printf(CYAN "% 4d" RESET " fopen's and " CYAN "% 4d " RESET "fcloses's\n", file_opens, file_closes);
+  printf(CYAN "% 5d" RESET " fopen's and " CYAN "% 5d " RESET "fcloses's\n", file_opens, file_closes);
   
   if (allocations == frees) printf(GREEN "    Memory Success: ");
   else                      printf(  RED "    Memory Failure: ");
   
-  printf(CYAN "% 4d" RESET " alloc's and " CYAN "% 4d " RESET "free's\n", allocations, frees);
+  printf(CYAN "% 5d" RESET " alloc's and " CYAN "% 5d " RESET "free's\n", allocations, frees);
 }

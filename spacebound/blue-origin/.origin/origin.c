@@ -3,11 +3,11 @@
 
 extern FILE * yyin;
 
-bool console_error_messages = true;
-bool use_real_time_clock    = true;
-bool print_to_console       = true;
-bool allow_user_input       = true;
-
+bool console_error_messages  = true;
+bool use_real_time_clock     = true;
+bool print_to_console        = true;
+bool allow_user_input        = true;
+int  console_print_frequency = 1000;    // ms between prints
 
 int main(int nargs, char ** args) {
   

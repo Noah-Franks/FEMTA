@@ -171,7 +171,7 @@ void start_i2c() {
   
   if (schedule -> print_sensors) {
     
-    printf(GREY "Time     ");
+    printf(GREY "    Time  ");
     
     for (iterate(active_sensors, Sensor *, sensor)) {
       if (sensor -> print) {
@@ -181,7 +181,9 @@ void start_i2c() {
           
           when (output -> print);
           
-          printf("%s%-*s", output -> print_code, 5 + output -> print_places + strlen(output -> unit), output -> name);
+          printf("%s%*s  ", output -> print_code, 
+                 5 + output -> print_places + strlen(output -> unit), 
+                 output -> name);
         }
       }
     }
@@ -203,10 +205,11 @@ void * i2c_main() {
   FILE * i2c_log = safe_open("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
   
-  long bus_interval    = schedule -> i2c_interval;
-  long bus_interval_ms = schedule -> i2c_interval / (long) 1E6;
+  long bus_interval    = schedule -> i2c_interval;                 // 
+  long bus_interval_ms = schedule -> i2c_interval / (long) 1E6;    // 
   
-  long last_read_duration = 0;    // tracks time taken to read i2c bus
+  long last_read_duration = 0;                  // tracks time taken to read i2c bus
+  long print_delay        = bus_interval_ms;    // time before next console print
   
   while (!schedule -> term_signal) {
     
@@ -264,9 +267,11 @@ void * i2c_main() {
     }
     
     // print to console
-    if (schedule -> print_sensors) {
+    if (schedule -> print_sensors && (print_delay -= bus_interval_ms) <= 0) {
       
-      printf(GREY "%.3lf%s  ", time_passed(), time_unit);
+      print_delay = console_print_frequency;
+      
+      printf(GREY "% 7.3lf%s  ", time_passed(), time_unit);
       
       for (iterate(active_sensors, Sensor *, sensor)) {
         
@@ -278,10 +283,10 @@ void * i2c_main() {
           
           when (output -> print);
           
-          if (output -> measure >= 0)
-            printf(" ");
-          
-          printf("%s%.*f%s  ", output -> print_code, output -> print_places, output -> measure, output -> unit);
+          printf("%s% *.*f%s  ", output -> print_code,
+                 output -> print_places + strlen(output -> unit) + 4,
+                 output -> print_places,
+                 output -> measure, output -> unit);
         }
       }
       
@@ -298,7 +303,7 @@ void * i2c_main() {
     
     last_read_duration = read_duration;
     
-    real_nano_sleep(time_remaining);   // interval minus time it took to read sensors
+    nano_sleep(time_remaining);   // interval minus time it took to read sensors
   }
   
   fclose(i2c_log);  

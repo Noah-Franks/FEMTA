@@ -123,7 +123,7 @@ local void * one_main() {
     
     last_read_duration = read_duration;
     
-    real_nano_sleep(time_remaining);
+    nano_sleep(time_remaining);
   }
   
   return NULL;

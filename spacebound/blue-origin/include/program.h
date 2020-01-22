@@ -3,10 +3,11 @@
 #include "headers.h"
 
 // clock.c (system)
-extern  void   real_sleep      (time_t seconds        );
-extern  void   real_milli_sleep(long ms               );
-extern  void   real_nano_sleep (long ns               );
-extern  long   real_time_diff  (struct timespec * past);
+extern  void   real_sleep    (time_t seconds        );
+extern  void   milli_sleep   (long ms               );
+extern  void   micro_sleep   (long us               );
+extern  void   nano_sleep    (long ns               );
+extern  long   real_time_diff(struct timespec * past);
 
 // color.c (system)
 extern  void   init_color       (void       );

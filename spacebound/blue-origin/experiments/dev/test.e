@@ -4,45 +4,62 @@ define leave other;
 define leave never;
 
 Sensor test 1/1Hz {
-  [calibrate   | zero    , poly, raw, K   |    1.0, 8.0];
-/*[calibrate   | identity, poly, raw, min |    1.0, 1.0];
-  [calibrate   | sine    , poly, raw, kPa |    8.0, 0.0];
-  [calibrate   | cosine  , poly, raw, V   |  0.008, 0.0];*/
-//[calibrate   | random  , poly, raw, s   | 0.0001, 0.0];
+  [calibrate   | zero    , poly, raw, K   |     1.0, 8.0];
+  [calibrate   | identity, poly, raw, min |   -1.05, 1.0];
+  [calibrate   | sine    , poly, raw, kPa |     8.0, 0.0];
+  [calibrate   | cosine  , poly, raw, V   |   0.008, 0.0];
+//[calibrate   | random  , poly, raw, s   |  0.0001, 0.0];
+  
+  [calibrate   | sine    , poly, kPa, F |  2.0, 1.0];
   
   // sanity check: no 999 should show up
 //[calibrate   | random, poly, raw, min   |         999];
   
   [conversions | zero    , raw, K         |            ];
-/*[conversions | identity, raw, min       |            ];
-  [conversions | sine    , raw, kPa       |            ];
-  [conversions | cosine  , raw, V, mV     |            ];*/
+  [conversions | identity, raw, min       |            ];
+  [conversions | sine    , raw, kPa, F, C |            ];
+  [conversions | cosine  , raw, V, mV     |            ];
 //[conversions | random  , raw, s, min    |            ];
   
   [calibrate   | zero    , poly, raw, kPa |    1.0, 8.0];
-  [conversions | sine    , raw, raw       |            ];
+  //  [conversions | sine    , raw, raw       |            ];
   
   [smooth      | random                   | 0.01       ]
   
-  [print       | blue, sine, cosine, zero | 2, 4       ]
-  [print       | zero                     | 1          ]
-  [print       | green, identity          |            ]
-  [print       | purple, random           | 0          ]
-    
-  /*if (State start | zero > 0K | forever) {
+  [print       | blue, sine       | 2, 3       ]
+    //[print       | zero                     | 1          ]
+    //[print       | cosine                   | 4          ]
+    //[print       | green, identity          |            ]
+  
+    /*if (State start | cosine < 5mV | forever) {
+      
+      set pin 7 pos;
+      set pin 7 neg after 6s;
+      
+      set pin 8 pos;
+      set pin 8 neg after 4s;
+      
       leave start;
-      
-      enter start after 4s;
-      enter other after 4s;
-      enter never after 6s;    // never happens due to resetting
-      
-      set pin 7 neg;
-      set pin 7 pos after 2s;
-  }*/
+      }*/
 }
 
-
-/*Sensor ds32 1Hz {
+Sensor ds32 1Hz {
   [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0]
   [conversions | Time, raw, s       |                  ]
-}*/
+  
+  [print | orange, Time      | 3 ]
+    //[print | red, Temperature | 2 ]
+}
+
+Sensor ad15_gnd 25Hz {
+  [calibrate   | A0, poly, raw, V    | 0.0001874287, -0.0009012627]; 
+  [calibrate   | A1, poly, raw, V    | 0.0001874287, -0.0009012627]; 
+  [calibrate   | A2, poly, raw, V    | 0.0001874287, -0.0009012627]; 
+  [calibrate   | A3, poly, raw, V    | 0.0001874287, -0.0009012627]; 
+  [conversions | A0, raw, V          |                            ];
+  [conversions | A1, raw, V          |                            ];
+  [conversions | A2, raw, V          |                            ];
+  [conversions | A3, raw, V          |                            ];
+  [print       | mint, A0            | 4                          ];
+  [print       | purple, A1, A2, A3  | 4, 4, 4                    ];
+}

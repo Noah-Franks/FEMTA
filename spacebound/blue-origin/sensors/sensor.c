@@ -348,8 +348,8 @@ void flip_print(void * nil, char * raw_text) {
 }
 
 void sensor_log_header(Sensor * sensor, char * color) {
-  /* the default log header for when an experiment starts */
-
+  // the default log header for when an experiment starts
+  
   FILE * file = NULL;
   
   if (sensor -> bus == I2C_BUS) file = sensor -> i2c -> log;
@@ -369,8 +369,8 @@ void sensor_log_header(Sensor * sensor, char * color) {
 }
 
 void sensor_log_outputs(Sensor * sensor, FILE * file) {
-  /* the format for every sensor log    
-   * the log file is assumed to be open */
+  // the format for every sensor log.
+  // the log file is assumed to be open.
   
   fprintf(file, "%.5f\t%.4f", time_passed(), 0);
   

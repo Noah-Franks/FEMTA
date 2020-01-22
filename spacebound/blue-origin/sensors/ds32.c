@@ -9,7 +9,7 @@ int  initial_seconds;
 char formatted_time[32];
 long experiment_start_time;
 
-void schedule_tick(int gpio, int level, uint32_t tick) {
+local void schedule_tick(int gpio, int level, uint32 tick) {
   schedule -> interrupts++;
 }
 
@@ -155,13 +155,13 @@ bool read_ds32(i2c_device * ds32_i2c) {
 void set_time_ds32(Sensor * ds32) {
   
   uint8 time[7] = {
-    0b00000000,  // 0 tens ones          (seconds)
-    0b00010110,  // 0 tens ones          (minutes)
-    0b00110001,  // 0 am/pm 0 tens ones  (hours  )
-    0b00000111,  // 00000 weakday        (weekday)
-    0b00010110,  // 00 tens ones         (date   )
-    0b00000010,  // century 00 tens ones (month  )
-    0b00011001,  // tens ones            (year   )
+    0b00000000,    // 0 tens ones           (seconds)
+    0b00010110,    // 0 tens ones           (minutes)
+    0b00110001,    // 0 am/pm 0 tens ones   (hours  )
+    0b00000111,    // 00000 weakday         (weekday)
+    0b00010110,    // 00 tens ones          (date   )
+    0b00000010,    // century 00 tens ones  (month  )
+    0b00011001,    // tens ones             (year   )
   };
   
   i2c_write_bytes(ds32 -> i2c, 0x00, time, 7);

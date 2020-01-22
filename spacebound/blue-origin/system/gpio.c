@@ -35,7 +35,12 @@ void pin_inform_delays(char broadcom) {
 }
 
 void pin_set(char broadcom, bool hot) {
-  printf(YELLOW "DEBUG: %d set %d\n" RESET, broadcom, hot);
+  
+  //printf(YELLOW "DEBUG: %d set %d\n" RESET, broadcom, hot);
+  
+  if (hot) printf(YELLOW "%7.3f%s    set pin %d pos\n" RESET, time_passed(), time_unit, broadcom);
+  else     printf(YELLOW "%7.3f%s    set pin %d neg\n" RESET, time_passed(), time_unit, broadcom);
+  
   if (pins[broadcom].hot != hot) {
     pins[broadcom].hot = hot;
     gpioWrite(broadcom, (int) hot);
@@ -72,7 +77,7 @@ void pin_set_cold(void * nil, char * vbroadcom) {
 void fire(Charge * charge, bool hot) {
   // fires a charge, setting up any pulsing
   
-  printf("Fired charge %d %d\n", charge -> gpio, hot);
+  //printf("Fired charge %d %d\n", charge -> gpio, hot);
   
   if (!charge -> delay) {
     pin_set(charge -> gpio, hot);

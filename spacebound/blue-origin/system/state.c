@@ -28,7 +28,7 @@ void enter_state(char * state) {
   
   float event_time = time_passed();
   
-  printf(CYAN "%f%s    enter %s\n" RESET, event_time, time_unit, state);
+  printf(CYAN "%7.3f%s    enter %s\n" RESET, event_time, time_unit, state);
   hashmap_update(states, state, (void *) true);
   
   fprintf(schedule -> control_log, "%f%s\tstate\t%s\tenter\n", event_time, time_unit, state);
@@ -38,7 +38,7 @@ void leave_state(char * state) {
   
   float event_time = time_passed();
   
-  printf(CYAN "%f%s    leave %s\n" RESET, event_time, time_unit, state);
+  printf(CYAN "%7.3f%s    leave %s\n" RESET, event_time, time_unit, state);
   hashmap_update(states, state, (void *) false);
   
   fprintf(schedule -> control_log, "%f%s\tstate\t%s\tleave\n", event_time, time_unit, state);
