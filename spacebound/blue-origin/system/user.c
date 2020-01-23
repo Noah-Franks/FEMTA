@@ -39,7 +39,7 @@ void present_interface() {
     user_action action = hashmap_get(actions, (void *) (int) input[0]);
     void *      arg    = hashmap_get(args   , (void *) (int) input[0]);
     
-    if (arg)
+    if (action)
       action(arg, input);
   }
   

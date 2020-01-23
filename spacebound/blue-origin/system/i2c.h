@@ -25,3 +25,5 @@ typedef struct i2c_device {
   i2c_reader read;
   
 } i2c_device;
+
+#define FAKE_ADDRESS 0x00            // reserved address for virtual sensors

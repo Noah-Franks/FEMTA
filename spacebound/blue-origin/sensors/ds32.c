@@ -140,6 +140,9 @@ bool read_ds32(i2c_device * ds32_i2c) {
   
   // collected raw values, now to assign output streams
   
+  /*bind_stream(ds32, schedule -> interrupts, DS32_MEASURE_TIME       );
+    bind_stream(ds32, temperature           , DS32_MEASURE_TEMPERATURE);*/
+  
   Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME];
   Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];
   

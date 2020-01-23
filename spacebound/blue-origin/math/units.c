@@ -77,10 +77,11 @@ void init_units() {
   hashmap_add(unit_types,    "s",        "Time");
   hashmap_add(unit_types,   "ms",        "Time");
   hashmap_add(unit_types,  "min",        "Time");
+  hashmap_add(unit_types,    "%",  "Proportion");
   hashmap_add(unit_types,    "i",     "Integer");
   hashmap_add(unit_types,    "f",     "Decimal");
   
-  all_units = list_from(12, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min");
+  all_units = list_from(13, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%");
 }
 
 void drop_units() {
@@ -113,21 +114,21 @@ void print_units_supported() {
     ("Time\n"
      "   s   : system second\n"
      "  ms   : system milli-second\n"
-     " min   : system minute\n\n"
+     " min   : system minute\n"
      
      "Temperature\n"
      "  C    : Celcius\n"
      "  K    : Kelvin\n"
-     "  F    : Fahrenheit\n\n"
+     "  F    : Fahrenheit\n"
      
      "Pressure\n"
      "  atm  : Atmospheres\n"
      "  kPa  : kilo-Pascals\n"
-     "  torr : Torrecelli's unit\n\n"
+     "  torr : Torrecelli's unit\n"
      
      "Voltage\n"
      "   V   : Volts\n"
-     "  mV   : milli-Volts\n\n"
+     "  mV   : milli-Volts\n"
      );
 }
 

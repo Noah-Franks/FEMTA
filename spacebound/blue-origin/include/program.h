@@ -100,18 +100,20 @@ extern  int    yyparse      (void              );
 extern  void   print_config (void              );
 
 // sensor.c (sensors)
-extern  void  init_sensors           (void                         );
-extern  void  drop_sensors           (void                         );
-extern  void  start_sensors          (void                         );
-extern  float time_passed            (void                         );
-extern  void  sensor_process_triggers(Sensor * sensor              );
-extern  void  sensor_log_header      (Sensor * sensor, char * color);
-extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file );
-extern  void  flip_print             (void * nil, char * raw_text  );
+extern  void  init_sensors           (void                                      );
+extern  void  drop_sensors           (void                                      );
+extern  void  start_sensors          (void                                      );
+extern  float time_passed            (void                                      );
+extern  void  bind_stream            (Sensor * sensor, float reading, int stream);
+extern  void  sensor_process_triggers(Sensor * sensor                           );
+extern  void  sensor_log_header      (Sensor * sensor, char * color             );
+extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file              );
+extern  void  flip_print             (void * nil, char * raw_text               );
 
 // sensors/*
 extern  Sensor * init_ad15(Sensor * proto, char * title, List * modes, List * names);
 extern  Sensor * init_adxl(Sensor * proto                                          );
+extern  Sensor * init_arm6(Sensor * proto                                          );
 extern  Sensor * init_ds18(Sensor * proto, char * path                             );
 extern  Sensor * init_ds32(Sensor * proto                                          );
 extern  Sensor * init_mcp9(Sensor * proto                                          );

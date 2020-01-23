@@ -65,4 +65,5 @@ void print_usage_debug_info() {
   else                      printf(  RED "    Memory Failure: ");
   
   printf(CYAN "% 5d" RESET " alloc's and " CYAN "% 5d " RESET "free's\n", allocations, frees);
+  printf("\n");
 }

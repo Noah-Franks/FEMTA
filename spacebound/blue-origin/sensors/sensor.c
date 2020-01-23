@@ -72,7 +72,8 @@ void init_sensors() {
   
   Hashmap * adxl_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 3);
   Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 6);
-  Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
+  Hashmap * arm6_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 3);
+  Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
   Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
   Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 5);
@@ -94,6 +95,10 @@ void init_sensors() {
   hashmap_add(adxl_tar, "Y", (void *) (int) 1);
   hashmap_add(adxl_tar, "Z", (void *) (int) 2);
   
+  hashmap_add(arm6_tar, "Load"       , (void *) (int) ARM6_MEASURE_LOAD       );
+  hashmap_add(arm6_tar, "Memory"     , (void *) (int) ARM6_MEASURE_MEMORY     );
+  hashmap_add(arm6_tar, "Temperature", (void *) (int) ARM6_MEASURE_TEMPERATURE);
+  
   hashmap_add(ad15_tar, "A01", (void *) (int) 0);    // if this doesn't make sense to you,
   hashmap_add(ad15_tar, "A23", (void *) (int) 1);    // really think it through cause it's 
   hashmap_add(ad15_tar, "A0" , (void *) (int) AD15_MEASURE_A0);    // critical to the ad15's interface
@@ -106,13 +111,14 @@ void init_sensors() {
   hashmap_add(all_sensors, "ds32"    , sensor_create("ds32", DS32_ADDRESS, ds32_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds18"    , sensor_create("ds18",            0, ds18_tar, ONE_BUS));
   hashmap_add(all_sensors, "mcp9"    , sensor_create("mcp9", MCP9_ADDRESS, mcp9_tar, I2C_BUS));
-  hashmap_add(all_sensors, "test"    , sensor_create("test", TEST_ADDRESS, test_tar, I2C_BUS));
+  hashmap_add(all_sensors, "arm6"    , sensor_create("arm6", FAKE_ADDRESS, arm6_tar, I2C_BUS));
+  hashmap_add(all_sensors, "test"    , sensor_create("test", FAKE_ADDRESS, test_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_gnd", sensor_create("ad15_gnd", AD15_GND, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_vdd", sensor_create("ad15_vdd", AD15_VDD, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_sda", sensor_create("ad15_sda", AD15_SDA, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_scl", sensor_create("ad15_scl", AD15_SCL, ad15_tar, I2C_BUS));
   
-  all_target_maps = list_from(6, adxl_tar, ad15_tar, ds32_tar, ds18_tar, mcp9_tar, test_tar);
+  all_target_maps = list_from(7, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, mcp9_tar, test_tar);
   all_target_maps -> value_free = hashmap_delete;
 }
 
@@ -183,12 +189,12 @@ void start_sensors() {
       printf(RED "1-Wire schedule with divisor %dms is likely unserviceable.\n"
              "Please consider more harmonious frequencies from below\n" RESET
              "\t 1, 2, 4, 5, 10, 20, 25, 40, 50, 100, 125, 200, 250\n\n", one_divisor);
-
+    
     schedule -> one_active = true;
   }
   
-  schedule -> i2c_interval = i2c_divisor * 1E6;
-  schedule -> one_interval = one_divisor * 1E6;
+  schedule -> i2c_interval = i2c_divisor * 1000000;
+  schedule -> one_interval = one_divisor * 1000000;
   
   active_sensors = list_that_frees(sensor_close);
   
@@ -203,40 +209,45 @@ void start_sensors() {
   
   if (proto -> requested) {
     Sensor * ds32 = init_ds32(proto);
-    list_insert(active_sensors,          ds32       );
+    list_insert(active_sensors         , ds32       );
     list_insert(schedule -> i2c_devices, ds32 -> i2c);    // first so we can get the time
   }
   
+  // arm6
+  proto = hashmap_get(all_sensors, "arm6");
+  
+  if (proto -> requested) {
+    Sensor * arm6 = init_arm6(proto);
+    list_insert(active_sensors         , arm6       );
+    list_insert(schedule -> i2c_devices, arm6 -> i2c);
+  }
   
   // adxl
   proto = hashmap_get(all_sensors, "adxl");
-
+  
   if (proto -> requested) {
     Sensor * adxl = init_adxl(proto);
-    list_insert(active_sensors,          adxl       );
+    list_insert(active_sensors         , adxl       );
     list_insert(schedule -> i2c_devices, adxl -> i2c);
   }
-  
   
   // mcp9
   proto = hashmap_get(all_sensors, "mcp9");
   
   if (proto -> requested) {
     Sensor * mcp9 = init_mcp9(proto);
-    list_insert(active_sensors,          mcp9       );
+    list_insert(active_sensors         , mcp9       );
     list_insert(schedule -> i2c_devices, mcp9 -> i2c);
   }
-  
   
   // test
   proto = hashmap_get(all_sensors, "test");
   
   if (proto -> requested) {
     Sensor * test = init_test(proto);
-    list_insert(active_sensors,          test       );
+    list_insert(active_sensors         , test       );
     list_insert(schedule -> i2c_devices, test -> i2c);
   }
-  
   
   // ad15
   Sensor * ad15[4] = {
@@ -345,6 +356,16 @@ void flip_print(void * nil, char * raw_text) {
   for (iterate(active_sensors, Sensor *, sensor))
     if (!strcmp(sensor -> code_name, raw_text + 2))
       sensor -> print = !sensor -> print;
+}
+
+void bind_stream(Sensor * sensor, float reading, int stream) {
+  // processes a reading
+  
+  Output * output = &sensor -> outputs[stream];
+  
+  output -> measure = series_compute(output -> series, reading);
+  
+  // TODO: smooth here instead
 }
 
 void sensor_log_header(Sensor * sensor, char * color) {

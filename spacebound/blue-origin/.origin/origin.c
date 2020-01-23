@@ -66,6 +66,6 @@ int main(int nargs, char ** args) {
   #ifdef DEBUG_MODE
     print_usage_debug_info();
   #endif
-  
+    
   return EXIT_SUCCESS;
 }

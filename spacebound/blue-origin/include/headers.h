@@ -14,7 +14,9 @@
 #include <errno.h>
 #include <time.h>
 #include <math.h>
+#include <sys/time.h>
 #include <sys/prctl.h>
+#include <sys/resource.h>
 
 
 /* primatives */
@@ -114,6 +116,7 @@ typedef void (* user_action)(void * arg, char * raw_text);
 #include "../math/units.h"
 #include "../sensors/ad15.h"
 #include "../sensors/adxl.h"
+#include "../sensors/arm6.h"
 #include "../sensors/ds18.h"
 #include "../sensors/ds32.h"
 #include "../sensors/mcp9.h"

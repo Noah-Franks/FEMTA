@@ -9,7 +9,7 @@ void yyerror(char * format, ...);
 %option yylineno
 
 white  [ \t\r\n]+
-letter [A-Za-z_]
+letter [A-Za-z_%]
 digit  [0-9]
 
 %%
