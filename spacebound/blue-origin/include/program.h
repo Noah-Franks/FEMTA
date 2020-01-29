@@ -21,13 +21,14 @@ extern  void   exit_printing(int code, ...) opt(noreturn);
 extern  FILE * safe_open(char * path, char * mode);
 
 // gpio.c (system)
-extern  void  init_pins        (void                        );
-extern  void  drop_pins        (void                        );
-extern  void  pin_set          (char broadcom, bool hot     );
-extern  void  pin_inform_delays(char broadcom               );
-extern  void  pin_set_hot      (void * nil, char * vbroadcom);
-extern  void  pin_set_cold     (void * nil, char * vbroadcom);
-extern  void  fire             (Charge * charge, bool hot   );
+extern  void   init_pins         (void                        );
+extern  void   drop_pins         (void                        );
+extern  void   pin_set           (char broadcom, bool hot     );
+extern  void   pin_inform_delays (char broadcom               );
+extern  void   pin_set_hot       (void * nil, char * vbroadcom);
+extern  void   pin_set_cold      (void * nil, char * vbroadcom);
+extern  void   fire              (Charge * charge, bool hot   );
+extern  char * recover_from_crash(void                        );
 
 // hashmap.h (structure)
 extern  void      key_free          (void * element                         );
@@ -119,6 +120,15 @@ extern  Sensor * init_ds32(Sensor * proto                                       
 extern  Sensor * init_mcp9(Sensor * proto                                          );
 extern  Sensor * init_test(Sensor * proto                                          );
 
+// simulate.c
+extern  int   return_zero                        (void                       );
+extern  void  print_simulation_info              (void                       );
+extern  bool  simulation_read_i2c                (i2c_device * i2c           );
+extern  bool  simulation_read_one                (one_device * one           );
+extern  int   simulation_gpio_read               (uint8 broadcom             );
+extern  int   simulation_gpio_write              (uint8 broadcom, uint8 level);
+extern  bool  simulation_report_containment_error(void * nil, ...            ) opt(noreturn);
+
 // state.c (system)
 extern  void         init_states        (void                      );
 extern  void         drop_states        (void                      );
@@ -164,4 +174,18 @@ extern  void  present_interface(void);
 #define yyclean       debug_yylex_destroy
 #else
 #define yyclean       yylex_destroy          // yylex_destroy is a macro too
+#endif
+
+#ifdef SIMULATION_MODE
+#define i2cOpen(BUS, ADDR, FLAGS)         return_zero()                          // protect the i2c bus
+#define i2cClose(HANDLE)                  return_zero()                          // -------------------
+#define i2c_read_byte                     simulation_report_containment_error    // -------------------
+#define i2c_read_bytes                    simulation_report_containment_error    // -------------------
+#define i2c_raw_read                      simulation_report_containment_error    // -------------------
+#define i2c_raw_write                     simulation_report_containment_error    // -------------------
+#define i2c_write_byte                    simulation_report_containment_error    // -------------------
+#define i2c_write_bytes                   simulation_report_containment_error    // -------------------
+#define gpioRead                          simulation_gpio_read                   // redirect actuations
+#define gpioWrite                         simulation_gpio_write                  // -------------------
+#define gpioSetISRFunc(BCM, EDGE, OUT, F) return_zero();                         // -------------------
 #endif

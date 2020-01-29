@@ -48,8 +48,9 @@ typedef struct Output {
   float  smoothed;        // measurement after smoothing
   List * series;          // path of conversions required to get final measurement
   List * triggers;        // sensor triggers for this particular output stream
-  char * name;            // name of the output for the log file
+  char * name;            // name of the output for the log file - CHECK: used
   char * unit;            // final unit for logging and triggers
+  char * nice_name;       // nicer name used for the log file and console
   float  regressive;      // smoothing constant
   bool   enabled;         // whether output is enabled
   bool   print;           // whether measures should be printed
@@ -73,6 +74,7 @@ typedef struct Sensor {
   int data_streams;         // number of output data axes
   Output * outputs;         // everything this sensor produces
   Hashmap * targets;        // that which can be triggered (target str -> stream_index)
+  Hashmap * aliases;        // alternative names for each channel
   
   sensor_free teardown;     // how to free sensor
   

@@ -1,13 +1,10 @@
 
 #include "../include/program.h"
 
-local bool read_ds32(i2c_device * ds32_i2c);
-local bool ds32_start_square_wave(i2c_device * ds32_i2c);
-local void set_time_ds32(Sensor * ds32);
-
-int  initial_seconds;
 char formatted_time[32];
-long experiment_start_time;
+
+local bool read_ds32(i2c_device * ds32_i2c);
+local void set_time_ds32(Sensor * ds32);
 
 local void schedule_tick(int gpio, int level, uint32 tick) {
   schedule -> interrupts++;
@@ -22,18 +19,14 @@ Sensor * init_ds32(Sensor * ds32) {
   
   ds32 -> i2c -> log = safe_open("logs/ds32.log", "a");
   
-  //set_time_ds32(ds32);
-  
   setlinebuf(ds32 -> i2c -> log);    // write out every read
   
+  //set_time_ds32(ds32);
   
   // set up output data streams
   
   Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME];
   Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];
-  
-  time_output -> enabled = true;    // always enabled
-  temp_output -> enabled = true;    // --------------
   
   if (!ds32 -> outputs[DS32_MEASURE_TIME].series) {
     
@@ -49,31 +42,12 @@ Sensor * init_ds32(Sensor * ds32) {
     time_output -> unit   = strdup("s");
   }
   
-  if (!ds32 -> outputs[DS32_MEASURE_TEMPERATURE].series) {
-    temp_output -> series = list_from(1, series_element_from_conversion(convert_identity));
-    temp_output -> unit   = strdup("C");
-  }
-  
   fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nExperiment Duration [%s]\tTemperature [%s]\tHuman Time\n" RESET,
 	  time_output -> unit, temp_output -> unit);
   
   
-  // establish time experiment information
-  
-  ds32_start_square_wave(ds32 -> i2c);
-  gpioSetISRFunc(20, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
-  read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
-  
-  schedule -> interrupt_interval = series_compute(time_output -> series, 1.0f);
-  time_unit = time_output -> unit;
-  
-  return ds32;
-}
-
-bool ds32_start_square_wave(i2c_device * ds32_i2c) {
-  // asks the ds32 to start emitting square waves at a rate of 1.024 kHz.
-  
-  /* Bits, from left to right, brackets going in binary order
+  /* Ask the ds32 to start emitting square waves at a rate of 1.024kHz.
+   * The bits, from left to right, with the brackets going in binary order
    * 
    *  7: Let oscillator use battery        {no, yes} (Crazy to not say 'yes')
    *  6: Enable square wave                {no, yes} (We use this for interrupts)
@@ -82,19 +56,18 @@ bool ds32_start_square_wave(i2c_device * ds32_i2c) {
    *  2: What to use the SQR pn for        {square waves, alarms}
    *  1: Enable Alarm 2?                   {no, yes}
    *  0: Enable Alarm 1?                   {no, yes}
-   * 
    */
   
-  if (!i2c_write_byte(ds32_i2c, 0x0E, 0b01101000)) {
+  if (!i2c_write_byte(ds32 -> i2c, 0x0E, 0b01101000))
     printf(RED "Could not enable ds32 square waves!\n" RESET);
-    return false;
-  }
   
-  /*uint8 reg = i2c_read_byte(ds32_i2c, 0x0E);
+  gpioSetISRFunc(20, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
+  read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
   
-    printf("DEBUG: %u\n", reg);*/
+  schedule -> interrupt_interval = series_compute(time_output -> series, 1.0f);
+  time_unit = time_output -> unit;
   
-  return true;
+  return ds32;
 }
 
 bool read_ds32(i2c_device * ds32_i2c) {
@@ -134,7 +107,7 @@ bool read_ds32(i2c_device * ds32_i2c) {
 	  meridian);
   
   float temperature = 1.0f * read_raws[7] + (read_raws[8] >> 6) * 0.25f;
-
+  
   float n_interrupts = (float) schedule -> interrupts;
   
   

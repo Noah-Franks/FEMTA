@@ -66,7 +66,7 @@ void print_config();
   Specification * specification;
 }
 
-%token IF SET ENTER LEAVE AFTER STATE PIN POS NEG DEFINE SENSOR
+%token IF SET ENTER LEAVE AFTER STATE PIN POS NEG WHERE IS DEFINE SENSOR
 
 %token  <string>        ID
 %token  <numeric>       NUMERIC
@@ -159,6 +159,7 @@ Tag      : '[' ID                      ']'                 { $$ = make_tag($2, N
          | '[' ID ':'         ':' Args ']'                 { $$ = make_tag($2, NULL,   $5);                       }
          | '[' ID ':' Options ':'      ']'                 { $$ = make_tag($2,   $4, NULL);                       }
          | '[' ID ':' Options ':' Args ']'                 { $$ = make_tag($2,   $4,   $6);                       }
+         | WHERE ID IS ID                                  { $$ = make_tag(strdup("alias"), list_from(2, $2, $4), NULL);  }
          ;
 
 Args     : Args ',' NUMERIC                                { list_insert($1, $3); $$ = $1;                        }
@@ -434,6 +435,11 @@ Specification * make_tag(char * id, List * options, List * args) {
         }
     }
     
+    else if (!strcmp(id, "alias")) {
+        if (args                            ) yyerror("Aliasing takes no arguments"                         );
+        if (!options || options -> size != 2) yyerror("Aliasing takes 2 options, the channel and alias name");
+    }
+    
     else {
         yyerror("Invalid tag id " CYAN "%s", id);
     }
@@ -471,6 +477,60 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
     
     if (!specifications) return;
     
+    
+    /* collect all the aliases */
+    
+    for (iterate(specifications, Specification *, specification)) {
+        
+        when (!strcmp(specification -> id, "alias"));
+        
+        List * options = specification -> options;
+        
+        char * target = list_get(options, 0);
+        char * alias  = list_get(options, 1);
+        
+        check_target(proto, target);
+        
+        if (hashmap_exists(proto -> targets, alias))
+            yyerror("Tried to alias " CYAN "%s" RED "'s " CYAN "%s " RED "channel as itself", proto -> code_name, alias);
+        
+        if (hashmap_exists(proto -> targets, alias))
+            yyerror("Found more than one alias for " CYAN "%s" RED "'s " CYAN "%s", proto -> code_name, target);
+        
+        // use the alias for the log file header
+        proto -> outputs[(int) hashmap_get(proto -> targets, target)].nice_name = alias;
+        
+        hashmap_add(proto -> aliases, alias, target);
+        list_delete(specification -> options);
+        specification -> options = NULL;          // protection from freer assignment later
+    }
+    
+    
+    /* replace aliases */
+    
+    for (iterate(specifications, Specification *, specification)) {
+        
+        List * options = specification -> options;
+        
+        if (!strcmp(specification -> id, "trigger")) {
+            
+            Trigger * trigger = list_get(options, 0);    // we encapsulated the trigger within the options list
+            
+            when (hashmap_exists(proto -> aliases, trigger -> id));
+            
+            char * unaliased = strdup(hashmap_get(proto -> aliases, trigger -> id));
+            
+            free(trigger -> id);
+            
+            trigger -> id = unaliased;
+        }
+        
+        //if (!strcmp(specification -> id, ""
+        
+    }
+    
+    
+    
     List * all_calibrations = list_create();
     
     for (iterate(specifications, Specification *, specification)) {
@@ -506,8 +566,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
                 
                 if ((int) target_index < 1) continue;    // first is target, so skip (see list.h)
                 
-                if (!hashmap_exists(proto -> targets, target))
-                    yyerror("Unknown sensor target " CYAN "%s " RED "for " CYAN "%s", target, proto -> code_name);
+                check_target(proto, target);
                 
                 int stream = (int) hashmap_get(proto -> targets, target);
                 
@@ -546,6 +605,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
                 yyerror("Found second smoothing term " CYAN "%f " RED " for " CYAN "%s", regressive, proto -> code_name);
             
             proto -> outputs[stream].regressive = regressive;
+            
             list_delete(options);
             list_delete(args);
         }
@@ -578,6 +638,10 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
             calibration -> target    = target;
             
             list_insert(all_calibrations, calibration);
+            
+            // check bellow
+            options -> value_free = NULL;
+            list_delete(options);
         }
         
         else if (!strcmp(specification -> id, "conversions")) {
@@ -711,14 +775,12 @@ void print_config() {
         return;
     }
     
-    printf("\n\n");
-    
     print_all_states();
     
     for (iterate(all_sensors -> all, Sensor *, proto)) {
         
         if (!proto -> requested) continue;
-    
+        
         int total_triggers = 0;
         for (int stream = 0; stream < proto -> data_streams; stream++)
             total_triggers += proto -> outputs[stream].triggers -> size;

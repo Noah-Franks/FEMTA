@@ -7,8 +7,8 @@
 // temperature
 local float take(   C,    K) (float x) { return x + 273.15f;                           }
 local float take(   K,    C) (float x) { return x - 273.15f;                           }
-local float take(   F,    C) (float x) { return x * (9.0f / 5.0f) + 32.0f;             }
-local float take(   C,    F) (float x) { return (x - 32.0f) * (5.0f / 9.0f);           }
+local float take(   F,    C) (float x) { return (x - 32.0f) * (5.0f / 9.0f);           }
+local float take(   C,    F) (float x) { return x * (9.0f / 5.0f) + 32.0f;             }
 local float take(   K,    F) (float x) { return (x - 273.15f) * (9.0f / 5.0f) + 32.0f; }
 local float take(   F,    K) (float x) { return (x - 32.0f) * (5.0f / 9.0f) + 273.15f; }
 

@@ -3,11 +3,11 @@
 
 extern FILE * yyin;
 
-bool console_error_messages  = true;
-bool use_real_time_clock     = true;
-bool print_to_console        = true;
-bool allow_user_input        = true;
-int  console_print_frequency = 1000;    // ms between prints
+bool console_error_messages = true;
+bool use_real_time_clock    = true;
+bool print_to_console       = true;
+bool allow_user_input       = true;
+int  console_print_interval = 1000;    // ms between prints
 
 int main(int nargs, char ** args) {
   
@@ -17,12 +17,17 @@ int main(int nargs, char ** args) {
   if (gpioInitialise() < 0)
     exit_printing(ERROR_OPERATING_SYSTEM, "pigpio unable to start");
   
-  if (nargs == 1) exit_printing(ERROR_EXPERIMENTER, "Please supply an experiment to run");
-  else            printf("Parsing experiment file %s\n", args[1]);
+  if (nargs == 1) 
+    exit_printing(ERROR_EXPERIMENTER, "Please supply an experiment to run");
   
   if (!(yyin = fopen(args[1], "r")))
     exit_printing(ERROR_EXPERIMENTER, "Experiment file %s does not exist", args[1]);
   
+  printf("\n");
+  
+  #ifdef SIMULATION_MODE
+  print_simulation_info();
+  #endif
   
   schedule = calloc(1, sizeof(*schedule));
   
@@ -64,8 +69,8 @@ int main(int nargs, char ** args) {
   blank(schedule);
   
   #ifdef DEBUG_MODE
-    print_usage_debug_info();
+  print_usage_debug_info();
   #endif
-    
+  
   return EXIT_SUCCESS;
 }

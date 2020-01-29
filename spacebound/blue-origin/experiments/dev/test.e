@@ -26,53 +26,73 @@ Sensor test 1/1Hz {
   
   [smooth      | random                   | 0.01       ]
   
-  [print       | blue, sine       | 2, 3       ]
-    //[print       | zero                     | 1          ]
-  [print       | pink, cosine                   | 4          ]
-    //[print       | green, identity          |            ]
+  [print       | blue, sine               | 2, 3       ]
+//[print       | zero                     | 1          ]
+//[print       | pink, cosine             | 4          ]
+//[print       | green, identity          |            ]
   
-    /*if (State start | cosine < 5mV | forever) {
-      
-      set pin 7 pos;
-      set pin 7 neg after 6s;
-      
-      set pin 8 pos;
-      set pin 8 neg after 4s;
-      
-      leave start;
-      }*/
+  where zero is dope;
 }
 
 Sensor ds32 1Hz {
-  [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0]
-  [conversions | Time, raw, s       |                  ]
+  
+  where Time is Layer;
+  //where Temperature is Temp;
+  
+  [calibrate   | Time, poly, raw, s       | 0.0009765625, 0.0]
+  [conversions | Time, raw, s             |                  ]
   
   [print | maroon, Time      | 3 ]
-    //[print | red, Temperature | 2 ]
+  //[print | red, Temperature | 2 ]
+  
+  if (State start | Layer > 0.1min | forever) {
+    
+    set pin 7 pos;
+    set pin 7 neg after 3s;
+    
+    set pin 8 pos;
+    set pin 8 neg after 2s;
+    
+    leave start;
+    enter start after 4s;
+  }
 }
 
 Sensor ad15_gnd 25Hz {
-  [calibrate   | A0, poly, raw, V   | 0.0001874287, -0.0009012627];
-  [calibrate   | A1, poly, raw, V   | 0.0001874287, -0.0009012627];
-  [calibrate   | A2, poly, raw, V   | 0.0001874287, -0.0009012627];
-  [calibrate   | A3, poly, raw, V   | 0.0001874287, -0.0009012627];
-  [conversions | A0, raw, V         |                            ];
-  [conversions | A1, raw, V         |                            ];
-  [conversions | A2, raw, V         |                            ];
-  [conversions | A3, raw, V         |                            ];
-  [print       | mint, A0           | 4                          ];
-  //[print       | purple, A1, A2, A3 | 4, 4, 4                    ];
+  
+  // alias channels with better names
+  /*where A0 is water_pressure;
+  where A1 is novec_pressure;
+  where A2 is water_temperature;
+  where A3 is novec_temperature;*/
+  
+  // alternatively, use the 'alias' tag
+  /*[alias       | A0, water_pressure              |                            ];
+  [alias       | A1, novec_pressure              |                            ];
+  [alias       | A2, water_temperature           |                            ];
+  [alias       | A3, novec_temperature           |                            ];*/
+  
+  /*[calibrate   | water_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
+  [calibrate   | novec_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
+  [calibrate   | water_temperature, poly, raw, V | 0.0001874287, -0.0009012627];
+  [calibrate   | novec_temperature, poly, raw, V | 0.0001874287, -0.0009012627];
+  [conversions | water_pressure   , raw, V       |                            ];
+  [conversions | novec_pressure   , raw, V       |                            ];
+  [conversions | water_temperature, raw, V       |                            ];
+  [conversions | novec_temperature, raw, V       |                            ];*/
+  [print       | mint, A0                        | 4                          ];
+  [print       | purple, A1, A2, A3              | 4, 4, 4                    ];
 }
 
 Sensor arm6 1Hz {
   
   [calibrate   | Temperature, poly, raw, C | 0.001, 0.000]
-  [conversions | Temperature, raw, C       |             ]
+  [conversions | Temperature, raw, C, F    |             ]
   
   [calibrate   | Load, poly, raw, %        |       100, 0]
   [conversions | Load, raw, %              |             ]
   
-  [print | salmon, Load        | 1 ];
-  //[print |   pink, Memory      | 0 ];
-  //[print | purple, Temperature | 2 ];
+  [print | salmon, Load                    |         1, 2];
+//[print |   pink, Memory      | 0 ];
+//[print | purple, Temperature | 2 ];
 }

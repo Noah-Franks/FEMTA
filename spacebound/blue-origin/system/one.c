@@ -34,6 +34,10 @@ one_device * create_one_device(Sensor * sensor, char * path, char * log_path, on
   if (sensor -> print) printf("with " MAGENTA "printing" RESET);
   printf("\nlogged in %s\n", log_path);
   
+  #ifdef SIMULATION_MODE
+  one -> read = simulation_read_one;
+  #endif
+  
   return one;
 }
 

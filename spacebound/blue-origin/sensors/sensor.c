@@ -35,8 +35,12 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
     }
     
     // assign a default name to each output channel
-    for (iterate(targets -> keys, char *, name))
-      proto -> outputs[(int) hashmap_get(targets, name)].name = name;
+    for (iterate(targets -> keys, char *, name)) {
+      proto -> outputs[(int) hashmap_get(targets, name)].name      = name;
+      proto -> outputs[(int) hashmap_get(targets, name)].nice_name = name;    // default nice name
+    }
+    
+    proto -> aliases = hashmap_create(hash_string, compare_strings, free, NULL, proto -> data_streams);
   }
   
   return proto;
@@ -45,6 +49,8 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
 void sensor_delete(void * vsensor) {
   
   Sensor * sensor = vsensor;
+  
+  //printf("SENSOR: %s\n", sensor -> code_name);
   
   for (int stream = 0; stream < sensor -> data_streams; stream++) {
     
@@ -55,6 +61,11 @@ void sensor_delete(void * vsensor) {
       list_delete(sensor -> outputs[stream].triggers);
     
     blank(sensor -> outputs[stream].unit);
+  }
+  
+  if (sensor -> aliases) {
+    hashmap_delete(sensor -> aliases);
+    //sensor -> aliases = NULL;
   }
   
   blank(sensor -> outputs);
@@ -71,7 +82,7 @@ void init_sensors() {
   all_sensors = hashmap_create(hash_string, compare_strings, NULL, sensor_delete, 16);
   
   Hashmap * adxl_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 3);
-  Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 6);
+  Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 4);
   Hashmap * arm6_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 3);
   Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
@@ -99,13 +110,10 @@ void init_sensors() {
   hashmap_add(arm6_tar, "Memory"     , (void *) (int) ARM6_MEASURE_MEMORY     );
   hashmap_add(arm6_tar, "Temperature", (void *) (int) ARM6_MEASURE_TEMPERATURE);
   
-  hashmap_add(ad15_tar, "A01", (void *) (int) 0);    // if this doesn't make sense to you,
-  hashmap_add(ad15_tar, "A23", (void *) (int) 1);    // really think it through cause it's 
-  hashmap_add(ad15_tar, "A0" , (void *) (int) AD15_MEASURE_A0);    // critical to the ad15's interface
-  hashmap_add(ad15_tar, "A1" , (void *) (int) AD15_MEASURE_A1);    // 
-  hashmap_add(ad15_tar, "A2" , (void *) (int) AD15_MEASURE_A2);    // 
-  hashmap_add(ad15_tar, "A3" , (void *) (int) AD15_MEASURE_A3);    // 
-  
+  hashmap_add(ad15_tar, "A0" , (void *) (int) AD15_MEASURE_A0);
+  hashmap_add(ad15_tar, "A1" , (void *) (int) AD15_MEASURE_A1);
+  hashmap_add(ad15_tar, "A2" , (void *) (int) AD15_MEASURE_A2);
+  hashmap_add(ad15_tar, "A3" , (void *) (int) AD15_MEASURE_A3);
   
   hashmap_add(all_sensors, "adxl"    , sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds32"    , sensor_create("ds32", DS32_ADDRESS, ds32_tar, I2C_BUS));
@@ -383,7 +391,7 @@ void sensor_log_header(Sensor * sensor, char * color) {
     
     Output * output = &sensor -> outputs[i];
     
-    fprintf(file, "\t%s [%s]", output -> name, output -> unit);
+    fprintf(file, "\t%s [%s]", output -> nice_name, output -> unit);
   }
   
   fprintf(file, "\n" RESET);

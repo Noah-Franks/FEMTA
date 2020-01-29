@@ -25,6 +25,12 @@ void drop_pins() {
   schedule -> pulse_pins = NULL;
 }
 
+char * recover_from_crash() {
+  // used in gdb to save the pigpio daemon from corruption
+  gpioTerminate();
+  return "success";
+}
+
 void pin_inform_delays(char broadcom) {
   // let system know this pin pulses
   
@@ -36,10 +42,8 @@ void pin_inform_delays(char broadcom) {
 
 void pin_set(char broadcom, bool hot) {
   
-  //printf(YELLOW "DEBUG: %d set %d\n" RESET, broadcom, hot);
-  
-  if (hot) printf(YELLOW "%7.3f%s    set pin %d pos\n" RESET, time_passed(), time_unit, broadcom);
-  else     printf(YELLOW "%7.3f%s    set pin %d neg\n" RESET, time_passed(), time_unit, broadcom);
+  if (hot) printf(YELLOW "%7.3f%s    set pin % 2d pos\n" RESET, time_passed(), time_unit, broadcom);
+  else     printf(YELLOW "%7.3f%s    set pin % 2d neg\n" RESET, time_passed(), time_unit, broadcom);
   
   if (pins[broadcom].hot != hot) {
     pins[broadcom].hot = hot;
@@ -56,7 +60,7 @@ void pin_set_hot(void * nil, char * vbroadcom) {
   
   float event_time = time_passed();
   
-  printf("%f%s     set %d hot\n" , event_time, time_unit, broadcom);
+  printf("%f%s     set % 2d hot\n" , event_time, time_unit, broadcom);
   fprintf(schedule -> control_log, "%f%s\twire\t%d\thot\n", event_time, time_unit, broadcom);
   
   pin_set(broadcom, true);
@@ -68,16 +72,14 @@ void pin_set_cold(void * nil, char * vbroadcom) {
   
   float event_time = time_passed();
   
-  printf("%f%s     set %d cold\n" , event_time, time_unit, broadcom);
+  printf("%f%s     set % 2d cold\n" , event_time, time_unit, broadcom);
   fprintf(schedule -> control_log, "%f%s\twire\t%d\tcold\n", event_time, time_unit, broadcom);
   
   pin_set(broadcom, false);
 }
 
 void fire(Charge * charge, bool hot) {
-  // fires a charge, setting up any pulsing
-  
-  //printf("Fired charge %d %d\n", charge -> gpio, hot);
+  // induces a pin change, setting up any pulsing if needed
   
   if (!charge -> delay) {
     pin_set(charge -> gpio, hot);

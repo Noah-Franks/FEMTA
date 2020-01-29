@@ -4,10 +4,11 @@
 
 /* static configuration */
 
-extern bool console_error_messages;
-extern bool use_real_time_clock;
-extern bool print_to_console;
-extern bool allow_user_input;
-extern int  console_print_frequency;
+extern bool console_error_messages;    // whether messages should be printed to the console
+extern bool use_real_time_clock;       // whether the real time clock should define expirement time
+extern bool print_to_console;          // whether to print any console output
+extern bool allow_user_input;          // whether to take input from the user
+extern int  console_print_interval;    // the ms between each console printout
 
-#define DEBUG_MODE
+#define DEBUG_MODE                     // define to track resources
+//#define SIMULATION_MODE                // define to simulate sensors

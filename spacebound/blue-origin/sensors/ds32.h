@@ -23,6 +23,4 @@
 
 #define DS32_ADDRESS 0x68
 
-extern int  initial_seconds;
 extern char formatted_time[32];
-extern long experiment_start_time;

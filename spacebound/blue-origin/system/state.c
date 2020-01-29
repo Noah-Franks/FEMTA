@@ -99,10 +99,9 @@ void print_all_states() {
   
   printf(GREEN "States\n    " RESET);
   
-  for (iterate(states -> keys, char *, name)) {
+  for (iterate(states -> keys, char *, name))
     if ((bool) hashmap_get(states, name)) printf(YELLOW "+" RESET "%s ", name);
     else                                  printf(YELLOW "-" RESET "%s ", name);
-  }
   
   printf("\n\n");
 }

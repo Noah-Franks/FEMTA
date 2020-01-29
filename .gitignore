@@ -28,3 +28,4 @@ spacebound/blue-origin/backups/*
 *.dot
 spacebound/blue-origin/parser/y.tab.*
 spacebound/blue-origin/parser/lex.yy.*
+spacebound/helper-scripts/*.txt

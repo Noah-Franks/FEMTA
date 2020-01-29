@@ -18,6 +18,7 @@ digit  [0-9]
 \/\*(([^*/]|\n)|(\*+([^*/]|\n)|\/([^*/]|\n)*|\/\*([^*/]|\n)*))*\**\*\/ {}    // multi comment
 
 if        { return IF;     }
+is        { return IS;     }
 set       { return SET;    }
 pin       { return PIN;    }
 pos       { return POS;    }
@@ -27,6 +28,7 @@ leave     { return LEAVE;  }
 state     { return STATE;  }
 State     { return STATE;  }
 after     { return AFTER;  }
+where     { return WHERE;  }
 define    { return DEFINE; }
 sensor    { return SENSOR; }
 Sensor    { return SENSOR; }

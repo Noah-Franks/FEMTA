@@ -1,12 +1,21 @@
 
 #include "../include/program.h"
 
+// prevent simulation preprocessor attack
+#ifdef SIMULATION_MODE
+#undef i2c_read_byte
+#undef i2c_read_bytes
+#undef i2c_raw_read
+#undef i2c_raw_write
+#undef i2c_write_byte
+#undef i2c_write_bytes
+#endif
+
 local int8 handles[0x7F];
 
 local void * i2c_main();
 
 i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {
-  // creates an i2c device, adding it to the device list
   
   i2c_device * i2c = calloc(1, sizeof(*i2c));
   
@@ -34,9 +43,13 @@ i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {
   
   // print a nice message for the user
   printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-	 sensor -> name, sensor -> hertz, i2c -> address);
+         sensor -> name, sensor -> hertz, i2c -> address);
   if (sensor -> print) printf("with " MAGENTA "printing\n" RESET);
   else                 printf("\n");
+  
+  #ifdef SIMULATION_MODE
+  i2c -> read = simulation_read_i2c;
+  #endif
   
   return i2c;
 }
@@ -183,7 +196,7 @@ void start_i2c() {
           
           printf("%s%*s  ", output -> print_code, 
                  5 + output -> print_places + strlen(output -> unit), 
-                 output -> name);
+                 output -> nice_name);
         }
       }
     }
@@ -192,10 +205,8 @@ void start_i2c() {
   }
   
   // create i2c thread
-  if (pthread_create(schedule -> i2c_thread, NULL, i2c_main, NULL)) {
+  if (pthread_create(schedule -> i2c_thread, NULL, i2c_main, NULL))
     printf(RED "Could not start i2c thread\n" RESET);
-    return;
-  }
 }
 
 void * i2c_main() {
@@ -269,7 +280,7 @@ void * i2c_main() {
     // print to console
     if (schedule -> print_sensors && (print_delay -= bus_interval_ms) <= 0) {
       
-      print_delay = console_print_frequency;
+      print_delay = console_print_interval;
       
       printf(GREY "% 7.3lf%s  ", time_passed(), time_unit);
       
