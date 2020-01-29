@@ -101,7 +101,7 @@ Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
       output -> unit   = strdup("mV");
     }
     
-    fprintf(log, "A%c [%s]\t", '0' + stream, output -> unit);
+    fprintf(log, "%s [%s]\t", output -> nice_name, output -> unit);
   }
   fprintf(log, "\n" RESET);
   

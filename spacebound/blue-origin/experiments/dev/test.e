@@ -39,10 +39,10 @@ Sensor ds32 1Hz {
   where Time is Layer;
   //where Temperature is Temp;
   
-  [calibrate   | Time, poly, raw, s       | 0.0009765625, 0.0]
-  [conversions | Time, raw, s             |                  ]
+  [calibrate   | Layer, poly, raw, s       | 0.0009765625, 0.0]
+  [conversions | Layer, raw, s             |                  ]
   
-  [print | maroon, Time      | 3 ]
+  [print | maroon, Layer      | 3 ]
   //[print | red, Temperature | 2 ]
   
   if (State start | Layer > 0.1min | forever) {
@@ -61,10 +61,10 @@ Sensor ds32 1Hz {
 Sensor ad15_gnd 25Hz {
   
   // alias channels with better names
-  /*where A0 is water_pressure;
+  where A0 is water_pressure;
   where A1 is novec_pressure;
   where A2 is water_temperature;
-  where A3 is novec_temperature;*/
+  where A3 is novec_temperature;
   
   // alternatively, use the 'alias' tag
   /*[alias       | A0, water_pressure              |                            ];
@@ -72,19 +72,21 @@ Sensor ad15_gnd 25Hz {
   [alias       | A2, water_temperature           |                            ];
   [alias       | A3, novec_temperature           |                            ];*/
   
-  /*[calibrate   | water_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
+  [calibrate   | water_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
   [calibrate   | novec_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
   [calibrate   | water_temperature, poly, raw, V | 0.0001874287, -0.0009012627];
   [calibrate   | novec_temperature, poly, raw, V | 0.0001874287, -0.0009012627];
   [conversions | water_pressure   , raw, V       |                            ];
   [conversions | novec_pressure   , raw, V       |                            ];
   [conversions | water_temperature, raw, V       |                            ];
-  [conversions | novec_temperature, raw, V       |                            ];*/
-  [print       | mint, A0                        | 4                          ];
+  [conversions | novec_temperature, raw, V       |                            ];
+  [print       | mint, water_pressure            | 4                          ];
   [print       | purple, A1, A2, A3              | 4, 4, 4                    ];
 }
 
 Sensor arm6 1Hz {
+  
+  where Load is cpu;
   
   [calibrate   | Temperature, poly, raw, C | 0.001, 0.000]
   [conversions | Temperature, raw, C, F    |             ]

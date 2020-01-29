@@ -7,7 +7,9 @@ Sensor test 1/1Hz {
   [print       | pink, sine               | 2       ];
 }
 
-Sensor ad15_vdd 20Hz {  
+Sensor ad15_vdd 20Hz {
+
+  where A2 is water;
   
   [calibrate | A2, poly, V, kPa |
     -0.00000805518095144006,
@@ -24,6 +26,9 @@ Sensor ad15_vdd 20Hz {
 }
 
 Sensor ad15_sda 20Hz {
+  
+  where A0 is ambient;
+  where A2 is novec;
   
   [calibrate | A0, poly, V, kPa |
     -0.00000805518095144006,
@@ -49,8 +54,8 @@ Sensor ad15_sda 20Hz {
   [conversions | A2, raw, V, kPa  |                              ];
   [print       | white, A0        | 4                            ];
   [print       | green, A2        | 4                            ];
-
-  if (State start | A0 < 20kPa | forever) {
+  
+  if (State start | ambient < 20kPa | forever) {
     
     // close the vent valve
     set pin  4 pos;
@@ -63,5 +68,21 @@ Sensor ad15_sda 20Hz {
     set pin 19 neg after 350ms;
     
     leave start;
+    enter rising;
+  }
+  
+  if (State rising | ambient > 25kPa | forever) {
+    
+    // open the vent valve
+    set pin 17 pos;
+    set pin  4 neg;
+    set pin 17 neg after 350ms;
+    
+    // open solenoid 1
+    set pin 26 pos;
+    set pin 19 neg;
+    set pin 26 neg after 350ms;
+    
+    leave rising;
   }
 }

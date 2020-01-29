@@ -282,7 +282,7 @@ Trigger * make_trigger(List * effects) {
     Trigger * trigger = calloc(1, sizeof(*trigger));
     
     trigger -> fired    = false;
-    trigger -> singular =  true;    // defaults
+    trigger -> singular = false;    // defaults
     trigger -> reverses = false;    // --------
     
     trigger -> wires_low  = list_create();
@@ -480,6 +480,8 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
     
     /* collect all the aliases */
     
+    Hashmap * aliases = proto -> aliases;
+    
     for (iterate(specifications, Specification *, specification)) {
         
         when (!strcmp(specification -> id, "alias"));
@@ -500,7 +502,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
         // use the alias for the log file header
         proto -> outputs[(int) hashmap_get(proto -> targets, target)].nice_name = alias;
         
-        hashmap_add(proto -> aliases, alias, target);
+        hashmap_add(aliases, alias, target);
         list_delete(specification -> options);
         specification -> options = NULL;          // protection from freer assignment later
     }
@@ -516,16 +518,44 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
             
             Trigger * trigger = list_get(options, 0);    // we encapsulated the trigger within the options list
             
-            when (hashmap_exists(proto -> aliases, trigger -> id));
+            when (hashmap_exists(aliases, trigger -> id));
             
-            char * unaliased = strdup(hashmap_get(proto -> aliases, trigger -> id));
+            char * unaliased = strdup(hashmap_get(aliases, trigger -> id));
             
             free(trigger -> id);
             
             trigger -> id = unaliased;
         }
         
-        //if (!strcmp(specification -> id, ""
+        else if (!strcmp(specification -> id, "print")) {
+          
+          for (iterate(options, char *, target)) {
+            
+            when ((int) target_index > 0         );    // first is color, so skip (see list.h)
+            when (hashmap_exists(aliases, target));
+            
+            char * unaliased = strdup(hashmap_get(aliases, target));
+            
+            blank(target);
+            
+            ((ListNode *) target_node) -> value = unaliased;
+          }
+        }
+        
+        else if (!strcmp(specification -> id, "smooth")    ||
+                 !strcmp(specification -> id, "calibrate") ||
+                 !strcmp(specification -> id, "conversions")) {
+          
+          char * target = list_get(options, 0);
+          
+          when (hashmap_exists(aliases, target));
+          
+          char * unaliased = strdup(hashmap_get(aliases, target));
+          
+          blank(target);
+          
+          list_get(options, 0) = unaliased;    // works due to compiler (list.h)
+        }
         
     }
     
