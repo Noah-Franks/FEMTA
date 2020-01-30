@@ -10,3 +10,20 @@ FILE * safe_open(char * path, char * mode) {
   
   return file;
 }
+
+bool scan_file(char * path, char * format, ...) {
+  
+  FILE * file = fopen(path, "r");
+  
+  if (!file)
+    return false;
+  
+  va_list args;
+  va_start(args, format);
+  
+  vfscanf(file, format, args);
+  
+  va_end(args);
+  fclose(file);
+  return true;
+}

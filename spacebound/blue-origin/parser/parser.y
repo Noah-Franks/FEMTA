@@ -172,17 +172,19 @@ Options  : ID                                              { $$ = list_from(1, $
 
 %%
 
-static void check_unit(char * unit_name) {
+local int n_triggers = 0;
+
+local void check_unit(char * unit_name) {
     if (!unit_is_supported(unit_name))
         yyerror("Unknown unit " CYAN "%s", unit_name);
 }
 
-static void check_target(Sensor * proto, char * target) {
+local void check_target(Sensor * proto, char * target) {
     if (!proto -> targets || !hashmap_exists(proto -> targets, target))
         yyerror("Target " CYAN "%s " RED "for %s is not known", target, proto -> code_name);
 }
 
-static void represent_as_decimal(Numeric * numeric) {
+local void represent_as_decimal(Numeric * numeric) {
     
     if (numeric -> is_decimal) return;
     
@@ -193,7 +195,7 @@ static void represent_as_decimal(Numeric * numeric) {
       numeric -> units[0] = 'f';           // -----------------------------
 }
 
-static void represent_as_integer(Numeric * numeric) {
+local void represent_as_integer(Numeric * numeric) {
     
     if (!numeric -> is_decimal) return;
     
@@ -204,7 +206,7 @@ static void represent_as_integer(Numeric * numeric) {
         numeric -> units[0] = 'i';           // -----------------------------
 }
 
-static void specification_delete(void * vspecification) {
+local void specification_delete(void * vspecification) {
     
     Specification * specification = vspecification;
     
@@ -232,12 +234,14 @@ EffectNode * make_charge(Numeric * wire, bool hot) {
     
     charge -> gpio = wire -> integer;    // delays are added later
     
+    blank(wire);
+    
     EffectNode * effect = calloc(1, sizeof(*effect));
     
     effect -> charge = charge;
     effect -> hot    = hot;
     
-    effect -> is_charge = true;    
+    effect -> is_charge = true;
     return effect;
 }
 
@@ -273,6 +277,7 @@ EffectNode * add_delay(EffectNode * effect, Numeric * delay) {
     if (effect -> is_charge) pin_inform_delays(effect -> charge -> gpio);
     else                     state_inform_delays(effect -> transition -> state);
     
+    blank(delay);
     return effect;
 }
 
@@ -285,12 +290,12 @@ Trigger * make_trigger(List * effects) {
     trigger -> singular = false;    // defaults
     trigger -> reverses = false;    // --------
     
-    trigger -> wires_low  = list_create();
-    trigger -> wires_high = list_create();
-    trigger -> enter_set  = list_create();
-    trigger -> leave_set  = list_create();
+    trigger -> wires_low  = list_that_frees(free);
+    trigger -> wires_high = list_that_frees(free);
+    trigger -> enter_set  = list_that_frees(transition_delete);
+    trigger -> leave_set  = list_that_frees(transition_delete);
     
-    for (iterate(effects, EffectNode *, effect))  
+    for (iterate(effects, EffectNode *, effect))
         if (effect -> is_charge)
             if (effect -> hot     ) list_insert(trigger -> wires_high, effect -> charge    );
             else                    list_insert(trigger -> wires_low , effect -> charge    );
@@ -298,6 +303,7 @@ Trigger * make_trigger(List * effects) {
             if (effect -> entering) list_insert(trigger -> enter_set , effect -> transition);
             else                    list_insert(trigger -> leave_set , effect -> transition);
     
+    effects -> value_free = free;
     list_delete(effects);
     return trigger;
 }
@@ -319,6 +325,7 @@ Specification * extend_trigger(
             if (!state_exists(state_name))
                 yyerror("Unknown state name " CYAN "%s", state_name);
         
+        state_names -> value_free = free;
         trigger -> precondition = state_names;
     } else {
         trigger -> precondition = list_create();
@@ -334,11 +341,14 @@ Specification * extend_trigger(
     
     if (options) {
         for (iterate(options, char *, option)) {
-            if      (!strcmp(option, "single"  )) trigger -> singular =  true;
-            else if (!strcmp(option, "forever" )) trigger -> singular = false;
-            else if (!strcmp(option, "reverses")) trigger -> reverses =  true;
+            if      (!strcmp(option, "single" )) trigger -> singular =  true;
+            else if (!strcmp(option, "forever")) trigger -> singular = false;
+            else if (!strcmp(option, "reverse")) trigger -> reverses =  true;
             else    yyerror("Unknown option " CYAN "%s", option);
         }
+        
+        options -> value_free = free;
+        list_delete(options);
     }
     
     Specification * specification = calloc(1, sizeof(*specification));
@@ -472,8 +482,8 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
     
     proto -> requested = true;
     
-    for (int stream = 0; stream < proto -> data_streams; stream++)    // TODO: move
-        proto -> outputs[stream].triggers = list_create();
+    for (int stream = 0; stream < proto -> data_streams; stream++)
+        proto -> outputs[stream].triggers = list_that_frees(trigger_delete);
     
     if (!specifications) return;
     
@@ -773,7 +783,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
             
             Trigger * opposite = calloc(1, sizeof(*opposite));
             
-            opposite -> id       =  strdup(trigger -> id);
+            opposite -> id       =  trigger -> id;
             opposite -> less     = !trigger -> less;
             opposite -> fired    =  trigger -> fired;
             opposite -> singular =  trigger -> singular;

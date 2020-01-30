@@ -9,13 +9,12 @@
  * Datasheet: 
  *   https://www.analog.com/media/en/technical-documentation/data-sheets/adxl345.pdf
  * 
- * License:
- *   GPLv3   
- * 
  * Author: 
  *   Noah Franks
  */
 
-#include "../include/headers.h"
-
 #define ADXL_ADDRESS 0x53
+
+#define ADXL_MEASURE_X 0
+#define ADXL_MEASURE_Y 1
+#define ADXL_MEASURE_Z 2

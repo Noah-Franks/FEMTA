@@ -9,9 +9,6 @@
  * Datasheet: 
  *   https://cdn-shop.adafruit.com/datasheets/ads1115.pdf
  * 
- * License:
- *   GPLv3   
- * 
  * Author: 
  *   Noah Franks
  */
@@ -38,7 +35,7 @@
 typedef struct AD15_Config {
   // read pages 18-19 of datasheet for more informaiton;
   // some of this has a bit of nuance.
-
+  
   union {
     uchar low_byte;           // ease of byte access
     struct {
@@ -49,7 +46,7 @@ typedef struct AD15_Config {
       uchar DATA_RATE: 3;     // samples per second
     };
   };
-
+  
   union {
     uchar high_byte;          // ease of byte access
     struct {

@@ -1,5 +1,6 @@
 
 define enter start;
+define leave rising;
 
 Sensor arm6 1Hz {
   
@@ -61,6 +62,21 @@ Sensor ad15_sda 20Hz {
   [conversions | novec  , raw, V, kPa  |                              ];
   [print       | white, ambient        | 4                            ];
   [print       | green, novec          | 4                            ];
+  
+  if (State rising | ambient > 25kPa) {
+    
+    // open the vent valve
+    set pin 17 pos;
+    set pin  4 neg;
+    set pin 17 neg after 350ms;
+    
+    // open solenoid 1
+    set pin 26 pos;
+    set pin 19 neg;
+    set pin 26 neg after 350ms;
+    
+    leave rising;
+  }
   
   if (State start | ambient < 20kPa) {
     

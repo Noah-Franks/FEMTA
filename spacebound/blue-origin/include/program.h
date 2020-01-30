@@ -18,7 +18,8 @@ extern  char * get_color_by_name(char * name);
 extern  void   exit_printing(int code, ...) opt(noreturn);
 
 // file.c (system)
-extern  FILE * safe_open(char * path, char * mode);
+extern  FILE * safe_open(char * path, char * mode       );
+extern  bool   scan_file(char * path, char * format, ...);
 
 // gpio.c (system)
 extern  void   init_pins         (void                        );
@@ -101,24 +102,25 @@ extern  int    yyparse      (void              );
 extern  void   print_config (void              );
 
 // sensor.c (sensors)
-extern  void  init_sensors           (void                                      );
-extern  void  drop_sensors           (void                                      );
-extern  void  start_sensors          (void                                      );
-extern  float time_passed            (void                                      );
-extern  void  bind_stream            (Sensor * sensor, float reading, int stream);
-extern  void  sensor_process_triggers(Sensor * sensor                           );
-extern  void  sensor_log_header      (Sensor * sensor, char * color             );
-extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file              );
-extern  void  flip_print             (void * nil, char * raw_text               );
+extern  void  init_sensors           (void                                         );
+extern  void  drop_sensors           (void                                         );
+extern  void  start_sensors          (void                                         );
+extern  float time_passed            (void                                         );
+extern  void  bind_stream            (Sensor * sensor, float reading, int stream   );
+extern  void  sensor_process_triggers(Sensor * sensor                              );
+extern  void  sensor_log_header      (Sensor * sensor, char * color                );
+extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file, char * addendum);
+extern  void  trigger_delete         (void * vtrigger                              );
+extern  void  flip_print             (void * nil, char * raw_text                  );
 
 // sensors/*
-extern  Sensor * init_ad15(Sensor * proto, char * title, List * modes, List * names);
-extern  Sensor * init_adxl(Sensor * proto                                          );
-extern  Sensor * init_arm6(Sensor * proto                                          );
-extern  Sensor * init_ds18(Sensor * proto, char * path                             );
-extern  Sensor * init_ds32(Sensor * proto                                          );
-extern  Sensor * init_mcp9(Sensor * proto                                          );
-extern  Sensor * init_test(Sensor * proto                                          );
+extern  Sensor * init_ad15(Sensor * proto, List * modes);
+extern  Sensor * init_adxl(Sensor * proto              );
+extern  Sensor * init_arm6(Sensor * proto              );
+extern  Sensor * init_ds18(Sensor * proto, char * path );
+extern  Sensor * init_ds32(Sensor * proto              );
+extern  Sensor * init_mcp9(Sensor * proto              );
+extern  Sensor * init_test(Sensor * proto              );
 
 // simulate.c
 extern  int   return_zero                        (void                       );
@@ -141,6 +143,7 @@ extern  void         enter              (Transition * trans        );
 extern  void         leave              (Transition * trans        );
 extern  bool         state_get          (char * state              );
 extern  Transition * transition_create  (char * state, int delay   );
+extern  void         transition_delete  (void * vtrans             );
 extern  void         state_inform_delays(char * state              );
 
 // units.c (math)

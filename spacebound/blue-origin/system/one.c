@@ -112,6 +112,8 @@ local void * one_main() {
         (one -> read)(one);
         
         one -> count = 0;
+        
+        schedule -> last_one_dev = one;
       }
     }
     

@@ -32,6 +32,14 @@ local float take( min,    s) (float x) { return x * 60.0f;                      
 local float take(  ms,  min) (float x) { return x / 60000.0f;                          }
 local float take( min,   ms) (float x) { return x * 60000.0f;                          }
 
+// storage
+local float take(   B,   KB) (float x) { return x / 1024.0f;                           }
+local float take(  KB,    B) (float x) { return x * 1024.0f;                           }
+local float take(   B,   MB) (float x) { return x / 1048576.0f;                        }
+local float take(  MB,    B) (float x) { return x * 1048576.0f;                        }
+local float take(  KB,   MB) (float x) { return x / 1024.0f;                           }
+local float take(  MB,   KB) (float x) { return x * 1024.0f;                           }
+
 local Hashmap * conversions;    // internally known, common conversions between units of the same type
 local Hashmap * unit_types;     // the type associated with each unit
 local List    * all_units;      // names for all the units known
@@ -42,7 +50,7 @@ float convert_identity (float x)  {
 
 void init_units() {
   
-  conversions = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
+  conversions = hashmap_create(hash_string, compare_strings, NULL, NULL, 26);
   unit_types  = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
   
   hashmap_add(conversions, arrow(   C,    K), take(   C,    K));
@@ -65,6 +73,12 @@ void init_units() {
   hashmap_add(conversions, arrow( min,    s), take( min,    s));
   hashmap_add(conversions, arrow(  ms,  min), take(  ms,  min));
   hashmap_add(conversions, arrow( min,   ms), take( min,   ms));
+  hashmap_add(conversions, arrow(   B,   KB), take(   B,   KB));
+  hashmap_add(conversions, arrow(  KB,    B), take(  KB,    B));
+  hashmap_add(conversions, arrow(   B,   MB), take(   B,   MB));
+  hashmap_add(conversions, arrow(  MB,    B), take(  MB,    B));
+  hashmap_add(conversions, arrow(  KB,   MB), take(  KB,   MB));
+  hashmap_add(conversions, arrow(  MB,   KB), take(  MB,   KB));
   
   hashmap_add(unit_types,    "C", "Temperature");
   hashmap_add(unit_types,    "K", "Temperature");
@@ -80,8 +94,12 @@ void init_units() {
   hashmap_add(unit_types,    "%",  "Proportion");
   hashmap_add(unit_types,    "i",     "Integer");
   hashmap_add(unit_types,    "f",     "Decimal");
+  hashmap_add(unit_types,    "B",     "Storage");
+  hashmap_add(unit_types,   "KB",     "Storage");
+  hashmap_add(unit_types,   "MB",     "Storage");
   
-  all_units = list_from(13, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%");
+  all_units = list_from
+    (16, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB");
 }
 
 void drop_units() {
@@ -192,6 +210,7 @@ void calibration_delete(void * vCalibration) {
   
   Calibration * calibration = vCalibration;
   
+  calibration -> constants -> value_free = free;
   list_delete(calibration -> constants);
   calibration -> constants = NULL;
   

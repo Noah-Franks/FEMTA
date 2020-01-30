@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../include/headers.h"
-
 typedef struct Transition {
   
   char * state;           // the broadcom number of the pin

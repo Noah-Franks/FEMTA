@@ -20,7 +20,6 @@ bool read_arm6(i2c_device * arm6_i2c) {
   
   Sensor * arm6 = arm6_i2c -> sensor;
   
-  
   /* ask the Linux Kernel for usage statistics */
   
   struct rusage usage;
@@ -29,17 +28,14 @@ bool read_arm6(i2c_device * arm6_i2c) {
   
   float cpu_usage = (usage.ru_stime.tv_sec + usage.ru_utime.tv_sec + 1.0) / time_passed();
   
-  int ram_usage;
-  int temperature;
+  int ram_usage;      // kilo-bytes of RAM in use
+  int temperature;    // temperature of the physical cpu in mC
   
-  FILE * stat_file = fopen("/proc/self/statm", "r");    // a pseudo-file
-  fscanf(stat_file, "%d", &ram_usage);
-  fclose(stat_file);
+  if (!scan_file("/proc/self/statm", "%d", &ram_usage))
+    return false;
   
-  FILE * thermal_zone = fopen("/sys/class/thermal/thermal_zone0/temp", "r");    // a psuedo-file?
-  fscanf(thermal_zone, "%d", &temperature);
-  fclose(thermal_zone);
-  
+  if (!scan_file("/sys/class/thermal/thermal_zone0/temp", "%d", &temperature))
+    return false;
   
   /* process output streams */
   
@@ -47,7 +43,7 @@ bool read_arm6(i2c_device * arm6_i2c) {
   bind_stream(arm6, ram_usage  , ARM6_MEASURE_MEMORY     );
   bind_stream(arm6, temperature, ARM6_MEASURE_TEMPERATURE);
   
-  sensor_log_outputs(arm6, arm6_i2c -> log);
+  sensor_log_outputs(arm6, arm6_i2c -> log, NULL);
   sensor_process_triggers(arm6);
   return true;
 }

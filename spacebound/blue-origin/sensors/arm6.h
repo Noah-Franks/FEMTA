@@ -2,11 +2,9 @@
 
 /**
  * Sensor:
- *   A virtual sensor for the ARM v6 l processor on the raspberry pi
- *
- * License:
- *   GPLv3
- *
+ *   A virtual sensor for the ARM v6 l processor on the raspberry pi.
+ *   Measures both resource statistics and cpu temperature.
+ * 
  * Author:
  *   Noah Franks
  */

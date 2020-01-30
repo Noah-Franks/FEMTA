@@ -15,8 +15,6 @@ typedef struct one_device {
   int bus_deferrals;       // how many bus deferrals since last read
   int count;               // counts since last read
   
-  int total_reads;         // total times this sensor has been read
-  
   one_reader read;
   
 } one_device;

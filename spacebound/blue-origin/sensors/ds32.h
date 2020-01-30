@@ -9,18 +9,14 @@
  * Datasheet: 
  *   https://datasheets.maximintegrated.com/en/ds/DS3231.pdf
  * 
- * License:
- *   GPLv3   
- * 
  * Author: 
  *   Noah Franks
  */
-
-#include "../include/headers.h"
 
 #define DS32_MEASURE_TIME        0
 #define DS32_MEASURE_TEMPERATURE 1
 
 #define DS32_ADDRESS 0x68
 
-extern char formatted_time[32];
+extern char   human_time[32];    // formatted time that humans can read
+extern char * ds32_time_unit;    // the time unit for the ds32

@@ -20,27 +20,15 @@ bool read_test(i2c_device * test_i2c) {
   
   Sensor * test = test_i2c -> sensor;
   
-  Output * output;    // this sensor is virtual, so the steps are one and the same
+  float identity = test -> outputs[TEST_MEASURE_IDENTITY].measure;
   
-  output = &test -> outputs[TEST_MEASURE_ZERO];
-  output -> measure = series_compute(output -> series, 0);
+  bind_stream(test,                       0, TEST_MEASURE_ZERO    );
+  bind_stream(test,                identity, TEST_MEASURE_IDENTITY);
+  bind_stream(test, sin(time_passed() / 10), TEST_MEASURE_SINE    );
+  bind_stream(test, cos(time_passed() / 10), TEST_MEASURE_COSINE  );
+  bind_stream(test,                  rand(), TEST_MEASURE_RANDOM  );
   
-  output = &test -> outputs[TEST_MEASURE_IDENTITY];
-  output -> measure = series_compute(output -> series, output -> measure);
-  
-  output = &test -> outputs[TEST_MEASURE_SINE];
-  output -> measure = series_compute(output -> series, sin(time_passed() / 10));
-  
-  output = &test -> outputs[TEST_MEASURE_COSINE];
-  output -> measure = series_compute(output -> series, cos(time_passed() / 10));
-  
-  output = &test -> outputs[TEST_MEASURE_RANDOM];
-  output -> measure = series_compute(output -> series, rand());
-  
-  
-  /* process output streams */
-  
-  sensor_log_outputs(test, test_i2c -> log);
+  sensor_log_outputs(test, test_i2c -> log, NULL);
   sensor_process_triggers(test);
   return true;
 }

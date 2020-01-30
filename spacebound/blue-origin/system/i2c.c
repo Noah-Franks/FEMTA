@@ -274,6 +274,8 @@ void * i2c_main() {
         (i2c -> read)(i2c);
         
         i2c -> count = 0;
+        
+        schedule -> last_i2c_dev = i2c;
       }
     }
     

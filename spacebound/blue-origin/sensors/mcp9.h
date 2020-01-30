@@ -9,15 +9,10 @@
  * Datasheet:
  *   http://ww1.microchip.com/downloads/en/DeviceDoc/25095A.pdf
  *
- * License:
- *   GPLv3
- *
  * Author:
  *   Mark Hartigan
  */
 
-#include "../include/headers.h"
-
-#define MCP9_ADDRESS 0x1f
+#define MCP9_ADDRESS 0x1F
 
 #define MCP9_MEASURE_TEMPERATURE 0

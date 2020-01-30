@@ -3,11 +3,11 @@
 
 local Hashmap * states;    // maps state names to bools
 
-Hashmap * state_delays;    // maps 
+Hashmap * state_delays;    // maps names to delays
 
 void init_states() {
-  states       = hashmap_create(hash_string, compare_strings, free, NULL, 16);
-  state_delays = hashmap_create(hash_string, compare_strings, NULL, free, 16);
+  states       = hashmap_create(hash_string, compare_strings, free, NULL, 32);
+  state_delays = hashmap_create(hash_string, compare_strings, NULL, free, 32);
 }
 
 void drop_states() {
@@ -93,6 +93,14 @@ Transition * transition_create(char * state, int delay) {
   transition -> delay = delay;
   
   return transition;
+}
+
+void transition_delete(void * vtrans) {
+  
+  Transition * trans = vtrans;
+  
+  blank(trans -> state);
+  free(trans);
 }
 
 void print_all_states() {

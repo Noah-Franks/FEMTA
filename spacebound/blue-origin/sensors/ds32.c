@@ -1,50 +1,35 @@
 
 #include "../include/program.h"
 
-char formatted_time[32];
+local bool read_ds32    (i2c_device * ds32_i2c           );    // how to read from this sensor
+local void set_time_ds32(Sensor * ds32                   );    // set the human-readable formatted time
+local void schedule_tick(int gpio, int level, uint32 tick);    // increment schedule interrupt counter
 
-local bool read_ds32(i2c_device * ds32_i2c);
-local void set_time_ds32(Sensor * ds32);
-
-local void schedule_tick(int gpio, int level, uint32 tick) {
-  schedule -> interrupts++;
-}
+char   human_time[32];                                         // formatted time that humans can read
+char * ds32_time_unit;                                         // the time unit for the ds32
 
 Sensor * init_ds32(Sensor * ds32) {
   
   ds32 -> name = "DS3231N";
   ds32 -> i2c = create_i2c_device(ds32, read_ds32);
+  ds32 -> i2c -> log = safe_open("logs/ds32.log", "a");
+  
   printf("logged in logs/ds32.log\n");
   printf("A real time clock\n\n");
   
-  ds32 -> i2c -> log = safe_open("logs/ds32.log", "a");
-  
   setlinebuf(ds32 -> i2c -> log);    // write out every read
+  //set_time_ds32(ds32);             // uncomment to set the time
   
-  //set_time_ds32(ds32);
+  Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME       ];    // sensors normally don't need this,
+  Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];    // but this one sets the human time.
   
-  // set up output data streams
+  schedule -> interrupt_interval = series_compute(time_output -> series, 1.0f);
+  ds32_time_unit = time_output -> unit;
   
-  Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME];
-  Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];
-  
-  if (!ds32 -> outputs[DS32_MEASURE_TIME].series) {
-    
-    Calibration * calibration = calloc(1, sizeof(*calibration));
-    
-    calibration -> curve     = strdup("poly");
-    calibration -> unit_from = strdup( "raw");
-    calibration -> unit_to   = strdup(   "s");
-    calibration -> target    = strdup("Time");
-    calibration -> constants = list_from(2, numeric_from_decimal(0.0009765625f), numeric_from_decimal(0.0f));
-    
-    time_output -> series = list_from(1, series_element_from_calibration(calibration));
-    time_output -> unit   = strdup("s");
-  }
-  
-  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nExperiment Duration [%s]\tTemperature [%s]\tHuman Time\n" RESET,
-	  time_output -> unit, temp_output -> unit);
-  
+  fprintf(ds32 -> i2c -> log, "\n\n%s%s\nReal Time [%s]\tOS Time [s]\t%s [%s]\t%s [%s]\tHuman Time\n" RESET,
+          GREEN, ds32 -> name, ds32_time_unit, 
+          time_output -> nice_name, time_output -> unit,
+          temp_output -> nice_name, temp_output -> unit);
   
   /* Ask the ds32 to start emitting square waves at a rate of 1.024kHz.
    * The bits, from left to right, with the brackets going in binary order
@@ -63,9 +48,6 @@ Sensor * init_ds32(Sensor * ds32) {
   
   gpioSetISRFunc(20, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
   read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
-  
-  schedule -> interrupt_interval = series_compute(time_output -> series, 1.0f);
-  time_unit = time_output -> unit;
   
   return ds32;
 }
@@ -101,34 +83,29 @@ bool read_ds32(i2c_device * ds32_i2c) {
   
   char weakday      = -1  + ((0b00000111 & read_raws[3]) >> 0);
   
-  sprintf(formatted_time, "%c%c/%c%c %c%c:%c%c:%c%c %cm",
-	  month_tens, month_ones, date_tens, date_ones,
-	  hours_tens, hours_ones, minutes_tens, minutes_ones, seconds_tens, seconds_ones,
-	  meridian);
+  sprintf(human_time, "%c%c/%c%c %c%c:%c%c:%c%c %cm",
+          month_tens, month_ones, date_tens, date_ones,
+          hours_tens, hours_ones, minutes_tens, minutes_ones, seconds_tens, seconds_ones, meridian);
   
   float temperature = 1.0f * read_raws[7] + (read_raws[8] >> 6) * 0.25f;
   
-  float n_interrupts = (float) schedule -> interrupts;
+  bind_stream(ds32, schedule -> interrupts, DS32_MEASURE_TIME       );
+  bind_stream(ds32,            temperature, DS32_MEASURE_TEMPERATURE);
   
-  
-  // collected raw values, now to assign output streams
-  
-  /*bind_stream(ds32, schedule -> interrupts, DS32_MEASURE_TIME       );
-    bind_stream(ds32, temperature           , DS32_MEASURE_TEMPERATURE);*/
-  
-  Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME];
-  Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];
-  
-  time_output -> measure = series_compute(time_output -> series, n_interrupts);
-  temp_output -> measure = series_compute(temp_output -> series, temperature );
-  
-  fprintf(ds32_i2c -> log, "%.4f\t%.2f\t%s\n", time_output -> measure, temp_output -> measure, formatted_time);
-  
+  sensor_log_outputs(ds32, ds32_i2c -> log, human_time);
   sensor_process_triggers(ds32);
   return true;
 }
 
+void schedule_tick(int gpio, int level, uint32 tick) {
+  schedule -> interrupts++;    // these occur at regular intervals, which lets us determine durations precisely
+}
+
 void set_time_ds32(Sensor * ds32) {
+  // set the human-readable time for the ds32.
+  // this has to be done each time the battery is removed.
+  
+  printf(GREEN "Setting the ds32's human time" RESET);
   
   uint8 time[7] = {
     0b00000000,    // 0 tens ones           (seconds)

@@ -10,8 +10,6 @@ long       time_start_os;     // system start from the OS's perspective
 List     * active_sensors;    // every active sensor on craft
 List     * all_target_maps;   // all maps associating a target to its channels
 Hashmap  * all_sensors;       // every sensor that could be specified
-int        n_triggers;        // number of triggers
-
 
 Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus) {
   
@@ -40,7 +38,7 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
       proto -> outputs[(int) hashmap_get(targets, name)].nice_name = name;    // default nice name
     }
     
-    proto -> aliases = hashmap_create(hash_string, compare_strings, free, NULL, proto -> data_streams);
+    proto -> aliases = hashmap_create(hash_string, compare_strings, free, free, proto -> data_streams);
   }
   
   return proto;
@@ -63,21 +61,37 @@ void sensor_delete(void * vsensor) {
     blank(sensor -> outputs[stream].unit);
   }
   
-  if (sensor -> aliases) {
+  if (sensor -> aliases)
     hashmap_delete(sensor -> aliases);
-    //sensor -> aliases = NULL;
-  }
   
   blank(sensor -> outputs);
   free(sensor);
 }
 
+void trigger_delete(void * vtrigger) {
+  
+  Trigger * trigger = vtrigger;
+  
+  if (!trigger -> reverses) {
+    
+    list_delete(trigger -> wires_low   );  trigger -> wires_low    = NULL;
+    list_delete(trigger -> wires_high  );  trigger -> wires_high   = NULL;
+    list_delete(trigger -> enter_set   );  trigger -> enter_set    = NULL;
+    list_delete(trigger -> leave_set   );  trigger -> leave_set    = NULL;
+    list_delete(trigger -> precondition);  trigger -> precondition = NULL;
+    
+    blank(trigger -> threshold_as_specified);
+    blank(trigger -> id);
+  }
+  
+  free(trigger);
+}
+
 void init_sensors() {
   
-  n_triggers = 0;
-  
-  sprintf(formatted_time, "[Clock not present! Defaulted to OS time!]");    // overwritten by clock
-  time_unit = "s";                                                          // --------------------
+  sprintf(human_time, "[Clock not present! Defaulted to OS time!]");    // overwritten by clock
+  ds32_time_unit = "s";                                                 // --------------------
+  time_unit = "s";                                                      // TODO: remove
   
   all_sensors = hashmap_create(hash_string, compare_strings, NULL, sensor_delete, 16);
   
@@ -92,28 +106,28 @@ void init_sensors() {
   hashmap_add(ds32_tar, "Time"       , (void *) (int) DS32_MEASURE_TIME       );
   hashmap_add(ds32_tar, "Temperature", (void *) (int) DS32_MEASURE_TEMPERATURE);
   
-  hashmap_add(ds18_tar, "Temperature", (void *) (int) 0);
+  hashmap_add(ds18_tar, "Temperature", (void *) (int) DS18_MEASURE_TEMPERATURE);
   
   hashmap_add(mcp9_tar, "Temperature", (void *) (int) MCP9_MEASURE_TEMPERATURE);
   
-  hashmap_add(test_tar, "zero"    , (void *) (int) TEST_MEASURE_ZERO    );
-  hashmap_add(test_tar, "identity", (void *) (int) TEST_MEASURE_IDENTITY);
-  hashmap_add(test_tar, "sine"    , (void *) (int) TEST_MEASURE_SINE    );
-  hashmap_add(test_tar, "cosine"  , (void *) (int) TEST_MEASURE_COSINE  );
-  hashmap_add(test_tar, "random"  , (void *) (int) TEST_MEASURE_RANDOM  );
+  hashmap_add(test_tar, "zero"       , (void *) (int) TEST_MEASURE_ZERO       );
+  hashmap_add(test_tar, "identity"   , (void *) (int) TEST_MEASURE_IDENTITY   );
+  hashmap_add(test_tar, "sine"       , (void *) (int) TEST_MEASURE_SINE       );
+  hashmap_add(test_tar, "cosine"     , (void *) (int) TEST_MEASURE_COSINE     );
+  hashmap_add(test_tar, "random"     , (void *) (int) TEST_MEASURE_RANDOM     );
   
-  hashmap_add(adxl_tar, "X", (void *) (int) 0);
-  hashmap_add(adxl_tar, "Y", (void *) (int) 1);
-  hashmap_add(adxl_tar, "Z", (void *) (int) 2);
+  hashmap_add(adxl_tar, "X"          , (void *) (int) ADXL_MEASURE_X          );
+  hashmap_add(adxl_tar, "Y"          , (void *) (int) ADXL_MEASURE_Y          );
+  hashmap_add(adxl_tar, "Z"          , (void *) (int) ADXL_MEASURE_Z          );
   
   hashmap_add(arm6_tar, "Load"       , (void *) (int) ARM6_MEASURE_LOAD       );
   hashmap_add(arm6_tar, "Memory"     , (void *) (int) ARM6_MEASURE_MEMORY     );
   hashmap_add(arm6_tar, "Temperature", (void *) (int) ARM6_MEASURE_TEMPERATURE);
   
-  hashmap_add(ad15_tar, "A0" , (void *) (int) AD15_MEASURE_A0);
-  hashmap_add(ad15_tar, "A1" , (void *) (int) AD15_MEASURE_A1);
-  hashmap_add(ad15_tar, "A2" , (void *) (int) AD15_MEASURE_A2);
-  hashmap_add(ad15_tar, "A3" , (void *) (int) AD15_MEASURE_A3);
+  hashmap_add(ad15_tar, "A0"         , (void *) (int) AD15_MEASURE_A0         );
+  hashmap_add(ad15_tar, "A1"         , (void *) (int) AD15_MEASURE_A1         );
+  hashmap_add(ad15_tar, "A2"         , (void *) (int) AD15_MEASURE_A2         );
+  hashmap_add(ad15_tar, "A3"         , (void *) (int) AD15_MEASURE_A3         );
   
   hashmap_add(all_sensors, "adxl"    , sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds32"    , sensor_create("ds32", DS32_ADDRESS, ds32_tar, I2C_BUS));
@@ -207,7 +221,6 @@ void start_sensors() {
   active_sensors = list_that_frees(sensor_close);
   
   
-  
   Sensor * proto;    // name of uninitialized sensor (See Invariant 0)
   
   /* i2c sensors */
@@ -262,48 +275,22 @@ void start_sensors() {
     NULL, NULL, NULL, NULL,
   };
   
-  proto = hashmap_get(all_sensors, "ad15_gnd");
+  char * code_names[4] = {
+    "ad15_gnd", "ad15_vdd", "ad15_sda", "ad15_scl"
+  };
   
-  if (proto -> requested) {
-    ad15[0] = init_ad15(proto, "Single channels",
-			list_from(4, A0, A1, A2, A3),
-			list_from(4, "10kOhm", "+3.3V", "Thermister 2", "Thermister 1"));
-
-    list_insert(active_sensors, ad15[0]);
+  for (int sensor_index = 0; sensor_index < 4; sensor_index++) {
+    
+    proto = hashmap_get(all_sensors, code_names[sensor_index]);
+    
+    if (proto -> requested) {
+      ad15[sensor_index] = init_ad15(proto, list_from(4, A0, A1, A2, A3));
+      list_insert(active_sensors, ad15[sensor_index]);
+    }
   }
   
-  proto = hashmap_get(all_sensors, "ad15_vdd");
-  
-  if (proto -> requested) {
-    ad15[1] = init_ad15(proto, "Alcohol Pressure",
-			list_from(4, A0, A1, A2, A3),
-			list_from(4, "ground", "+5V", "Thermister 3", "Thermister 6"));
-    
-    list_insert(active_sensors, ad15[1]);
-  }
-
-  proto = hashmap_get(all_sensors, "ad15_sda");
-
-  if (proto -> requested) {
-    //ad15[2] = init_ad15(proto, "Alcohol Pressure", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
-    ad15[2] = init_ad15(proto, "Ambient Air",
-			list_from(4, A0, A1, A2, A3),
-			list_from(4, "Thermister 5", "Thermister 4", "Thermister 7", "Thermister 8"));
-    
-    list_insert(active_sensors, ad15[2]);
-  }
-
-  proto = hashmap_get(all_sensors, "ad15_scl");
-
-  if (proto -> requested) {
-    ad15[3] = init_ad15(proto, "Differentials",
-                        list_from(4, A0, A1, A2, A3),
-                        list_from(4, "Thermister 9", "Thermister 10", "Thermister 11", "Thermister 12"));
-    list_insert(active_sensors, ad15[3]);
-  }
-    
-  for (int channel = 0; channel < 4; channel++)
-    for (int sensor_index = 0; sensor_index < 4; sensor_index++)
+  for (int channel = 0; channel < 4; channel++)                     // interleave the schedules
+    for (int sensor_index = 0; sensor_index < 4; sensor_index++)    // ------------------------
       if (ad15[sensor_index])
         list_insert(schedule -> i2c_devices, ad15[sensor_index] -> i2c);
   
@@ -378,14 +365,15 @@ void bind_stream(Sensor * sensor, float reading, int stream) {
 
 void sensor_log_header(Sensor * sensor, char * color) {
   // the default log header for when an experiment starts
+  // the file is assumed to already be open
   
   FILE * file = NULL;
   
   if (sensor -> bus == I2C_BUS) file = sensor -> i2c -> log;
   else                          file = sensor -> one -> log;
   
-  fprintf(file, "\n\n%s%s\nStart time %s\n", color, sensor -> name, formatted_time);
-  fprintf(file, "Real Time [%s]\tOS Time [s]", time_unit);
+  fprintf(file, "\n\n%s%s\nStart time %s\n", color, sensor -> name, human_time);
+  fprintf(file, "Real Time [%s]\tOS Time [s]", ds32_time_unit);
   
   for (int i = 0; i < sensor -> data_streams; i++) {
     
@@ -397,20 +385,17 @@ void sensor_log_header(Sensor * sensor, char * color) {
   fprintf(file, "\n" RESET);
 }
 
-void sensor_log_outputs(Sensor * sensor, FILE * file) {
+void sensor_log_outputs(Sensor * sensor, FILE * file, char * addendum) {
   // the format for every sensor log.
   // the log file is assumed to be open.
   
   fprintf(file, "%.5f\t%.4f", time_passed(), 0);
   
-  for (int i = 0; i < sensor -> data_streams; i++) {
-    
-    Output * output = &sensor -> outputs[i];
-    
-    fprintf(file, "\t%.4f", output -> measure);
-  }
+  for (int i = 0; i < sensor -> data_streams; i++)
+    fprintf(file, "\t%.4f", sensor -> outputs[i].measure);
   
-  fprintf(file, "\n");
+  if (addendum) fprintf(file, "\t%s\n", addendum);
+  else          fprintf(file,     "\n"          );
 }
 
 void sensor_process_triggers(Sensor * sensor) {

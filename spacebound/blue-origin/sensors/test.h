@@ -4,9 +4,6 @@
  * Sensor:
  *   A test sensor providing virtual data streams.
  *
- * License:
- *   GPLv3
- *
  * Author:
  *   Noah Franks
  */

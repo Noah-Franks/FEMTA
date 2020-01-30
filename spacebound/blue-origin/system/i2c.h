@@ -19,8 +19,6 @@ typedef struct i2c_device {
   bool reading;            // when true, scheduler knows to re-read
   
   int handle;              // pigpio handle
-
-  int total_reads;         // total times this sensor has been read
   
   i2c_reader read;
   
