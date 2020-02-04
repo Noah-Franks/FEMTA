@@ -43,10 +43,6 @@ typedef pthread_t        Thread;
 typedef pthread_mutex_t  Mutex;
 
 
-// Lambda Calculus
-typedef void (* lambda)(void *);
-
-
 /* type definitions */
 
 // ad15.h (sensors)
@@ -89,7 +85,7 @@ typedef struct SeriesElement SeriesElement;
 /* function pointers */
 
 // hashmap.h (structure)
-typedef int  (* hash_function  )(void *, int upper_bound   );
+typedef int  (* hash_function  )(void *, u32 upper_bound   );
 typedef int  (* key_comparator )(void * first, void * other);
 typedef void (* element_printer)(HashmapElement * element  );
 

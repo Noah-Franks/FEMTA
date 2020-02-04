@@ -180,7 +180,7 @@ void start_i2c() {
   
   if (!schedule -> i2c_active) return;
   
-  printf("\nStarting i2c schedule with " MAGENTA "%d " RESET "events\n\n", schedule -> i2c_devices -> size);
+  printf("\nStarting i2c schedule with " MAGENTA "%d " RESET "events\n\n", schedule -> i2c_devices -> elements);
   
   if (schedule -> print_sensors) {
     

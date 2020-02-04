@@ -372,7 +372,7 @@ Specification * make_tag(char * id, List * options, List * args) {
     
     if (!strcmp(id, "print")) {
         
-        if (!options || !options -> size)
+        if (!options || !options -> elements)
             yyerror("Please specify at least one channel to print");
         
         char * color = list_get(options, 0);
@@ -380,7 +380,7 @@ Specification * make_tag(char * id, List * options, List * args) {
         if (!get_color_by_name(color))
             list_insert_first(options, strdup("white"));
         
-        if (options -> size == 1) 
+        if (options -> elements == 1) 
             yyerror("Please specify at least one channel to print");
         
         if (args) {
@@ -396,7 +396,7 @@ Specification * make_tag(char * id, List * options, List * args) {
     
     else if (!strcmp(id, "smooth")) {
         
-        if (!options || options -> size != 1) yyerror("Smoothing requires exactly 1 argument (the target)");
+        if (!options || options -> elements != 1) yyerror("Smoothing requires exactly 1 argument (the target)");
         
         if (args) {
             Numeric * numeric = list_get(args, 0);
@@ -409,15 +409,15 @@ Specification * make_tag(char * id, List * options, List * args) {
     
     else if (!strcmp(id, "calibrate")) {
         
-        if (!args   )            yyerror("Calibration curves require at least one constant");
-        if (!options)            yyerror("Calibration requires a target");
-        if (options -> size < 4) yyerror("Calibration requires a unit 'from' followed by a unit 'to'");
+        if (!args   )                yyerror("Calibration curves require at least one constant");
+        if (!options)                yyerror("Calibration requires a target");
+        if (options -> elements < 4) yyerror("Calibration requires a unit 'from' followed by a unit 'to'");
         
         char * curve = (char *) list_get(options, 1);
         
         if      (!strcmp(curve, "poly"));
         else if (!strcmp(curve, "hart")) {
-            if (args -> size != 3)
+            if (args -> elements != 3)
                 yyerror("The Steinhart and Hart Equation requires exactly 3 constants");
         }
         else {
@@ -434,7 +434,7 @@ Specification * make_tag(char * id, List * options, List * args) {
     else if (!strcmp(id, "conversions")) {
         
         if (args                               ) yyerror("A conversion series should never have arguments"         );
-        if (!options || options -> size < 3    ) yyerror("A conversion series must include a target, then 2+ units");
+        if (!options || options -> elements < 3) yyerror("A conversion series must include a target, then 2+ units");
         if (strcmp(list_get(options, 1), "raw")) yyerror("A conversion series always starts with 'raw'"            );
         
         for (iterate(options, char *, unit_name)) {
@@ -446,8 +446,8 @@ Specification * make_tag(char * id, List * options, List * args) {
     }
     
     else if (!strcmp(id, "alias")) {
-        if (args                            ) yyerror("Aliasing takes no arguments"                         );
-        if (!options || options -> size != 2) yyerror("Aliasing takes 2 options, the channel and alias name");
+        if (args                                ) yyerror("Aliasing takes no arguments"                         );
+        if (!options || options -> elements != 2) yyerror("Aliasing takes 2 options, the channel and alias name");
     }
     
     else {
@@ -614,7 +614,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
                 proto -> outputs[stream].print_code   = print_code;
                 proto -> outputs[stream].print_places = 2;
                 
-                if (args && (int) target_index - 1 < args -> size) {
+                if (args && (int) target_index - 1 < args -> elements) {
                     
                     Numeric * places = list_retrieve(args, (int) target_index - 1);
                     
@@ -801,7 +801,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
             list_insert(triggers, opposite);
         }
         
-        n_triggers += triggers -> size;
+        n_triggers += triggers -> elements;
     }
     
     specifications -> value_free = specification_delete;    // Note: up to us to delete lists earlier
@@ -823,7 +823,7 @@ void print_config() {
         
         int total_triggers = 0;
         for (int stream = 0; stream < proto -> data_streams; stream++)
-            total_triggers += proto -> outputs[stream].triggers -> size;
+            total_triggers += proto -> outputs[stream].triggers -> elements;
         
         if (!total_triggers) continue;
         
@@ -841,7 +841,7 @@ void print_config() {
                 printf(CYAN "    %s" GRAY " %c" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
                        trigger -> id, direction, before -> decimal, before -> units, trigger -> threshold, final_unit);
                 
-                if (trigger -> precondition -> size) {
+                if (trigger -> precondition -> elements) {
                     
                     printf(" in { " BLUE);
                     

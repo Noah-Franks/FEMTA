@@ -140,7 +140,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
   // this is done to give the sensor time to actually flip values
   
   config -> current_mode = config -> current_mode -> next;
-  config -> mode_cycle = (config -> mode_cycle + 1) % (config -> modes -> size);
+  config -> mode_cycle = (config -> mode_cycle + 1) % (config -> modes -> elements);
   
   uint8 next_mode = (uint8) (int) config -> current_mode -> value;
   

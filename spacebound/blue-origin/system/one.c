@@ -63,7 +63,7 @@ void drop_one() {
 
 void start_one() {
   
-  printf("\nStarting 1-wire schedule with " MAGENTA "%d " RESET "events\n", schedule -> one_devices -> size);
+  printf("\nStarting 1-wire schedule with " MAGENTA "%d " RESET "events\n", schedule -> one_devices -> elements);
   
   // create 1-wire thread
   if (pthread_create(schedule -> one_thread, NULL, one_main, NULL)) {

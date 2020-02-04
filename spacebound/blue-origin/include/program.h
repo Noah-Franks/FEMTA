@@ -32,20 +32,16 @@ extern  void   fire              (Charge * charge, bool hot   );
 extern  char * recover_from_crash(void                        );
 
 // hashmap.h (structure)
-extern  void      key_free          (void * element                         );
-extern  int       hash_string       (void *  string, int upper_bound        );    // (char *, int)
-extern  int       hash_address      (void * address, int upper_bound        );    // (void *, int)
-extern  int       compare_strings   (void * first, void * other             );    // (char *, char *)
-extern  int       compare_addresses (void * first, void * other             );    // (void *, void *)
-extern  void      print_hashmap_long(HashmapElement * element               );
-extern  void    * hashmap_get       (Hashmap * map, void * key              );
-extern  void      hashmap_add       (Hashmap * map, void * key, void * value);
-extern  void      hashmap_update    (Hashmap * map, void * key, void * value);
-extern  bool      hashmap_exists    (Hashmap * map, void * key              );
-extern  void      hashmap_remove    (Hashmap * map, void * key              );
-extern  void      hashmap_print     (Hashmap * map, element_printer print   );
-extern  void      hashmap_delete    (Hashmap * map                          );
-extern  Hashmap * hashmap_create    (hash_function hash, key_comparator key_diff,
+extern  int       hash_string       (void *  string, u32 upper_bound        );     // hash any string
+extern  int       hash_address      (void * address, u32 upper_bound        );     // hash any address
+extern  int       compare_strings   (void * first, void * other             );     // see if strings are equal
+extern  int       compare_addresses (void * first, void * other             );     // see if addresses are equal
+extern  void      hashmap_add       (Hashmap * map, void * key, void * value);     // insert element into map
+extern  void    * hashmap_get       (Hashmap * map, void * key              );     // retrieve element from map
+extern  void      hashmap_update    (Hashmap * map, void * key, void * value);     // update an existing element
+extern  bool      hashmap_exists    (Hashmap * map, void * key              );     // see if element exists in map
+extern  void      hashmap_delete    (Hashmap * map                          );     // completely delete the map
+extern  Hashmap * hashmap_create    (hash_function hash, key_comparator key_diff,  // make a new map
                                      freer key_free, freer value_free, int size);
 
 // i2c.c (system)
@@ -63,15 +59,13 @@ extern  i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader       
 
 // list.c (structure)
 extern  List * list_create      (void                        );  // creates an empty list
-extern  List * list_from        (int vargs, ...              );  // creates a list pre-filled with elements
-extern  List * list_that_frees  (freer value_free            );  // creates an empty list that frees
+extern  List * list_from        (int vargs, ...              );  // creates a list holding the arguments
+extern  List * list_that_frees  (freer value_free            );  // creates an empty list that frees its elements
 extern  void   list_insert      (List * list, void * datum   );  // inserts a node at the end of the list
 extern  void   list_insert_first(List * list, void * datum   );  // inserts a node at the beginning of the list
-extern  void * list_retrieve    (List * list, int index      );  // gets the value of the node at the index in O(n)
-extern  void   list_remove      (List * list, ListNode * node);  // removes a node
-extern  void   list_concat      (List * first, List * other  );  // appends the second list to the end of the first
-extern  void   list_empty       (List * list                 );  // removes all nodes in the list
-extern  void   list_delete      (List * list                 );  // removes all nodes and frees the list itself
+extern  void * list_retrieve    (List * list, int index      );  // retrieves the ith element in the list in O(n)
+extern  void   list_remove      (List * list, ListNode * node);  // removes a node, freeing if necessary
+extern  void   list_delete      (List * list                 );  // completely deletes the list and its elements
 
 // math.c (math)
 extern  int    gcd(int a, int b) opt(const);

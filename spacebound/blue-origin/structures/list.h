@@ -7,16 +7,16 @@ typedef struct ListNode {
   struct ListNode * next;    // the node after this one
   struct ListNode * prev;    // the node before this one
   
-  void * value;              // the value contained
+  void * value;              // the content this node holds
   
 } ListNode;
 
 typedef struct List {
   
-  ListNode * head;           // the head of the list (has a value)
+  ListNode * head;           // the head of the list (same as every other nodes)
   freer      value_free;     // means by which nodes are free'd
   
-  int size;                  // number of elements in the list
+  int elements;              // the number of elements in the list
   
 } List;
 
@@ -34,18 +34,27 @@ typedef struct List {
 #define REP(NUM, X) REP##NUM(X)
 #define list_get(LIST, NUM) LIST -> head REP(NUM, -> next) -> value
 
-/* iterates over the elements in a list.                                    *
- * provides an index which can be used to count through the elements.       *
- * exposes the list node so that you can modify the list while iterating.   *
- * that's right, you can edit the list while iterating!                     *
- * the TYPE can be any C type.                                              */
+/* The following macro iterates over the elements in a list.                *
+ * It provides an index which can be used to count through the elements,    *
+ * and exposes the list node so that you can modify the list while          *
+ * iterating. That's right, you can edit the list while iterating!          *
+ * The TYPE argument can be any C type.                                     *
+ *                                                                          *
+ * You use the macro as a for-loop's expression, as seen below:             *
+ *                                                                          *
+ *   for (iterate(string_list, char *, string)) {                           *
+ *      int index = (int) string_index;                                     *
+ *      ListNode * node = (ListNode *) string_node;                         *
+ *      printf("%d: %p %s\n", index, node, string);                         *
+ *   }                                                                      *
+ *                                                                          */
 #define iterate(LIST, TYPE, NAME)                                           \
   TYPE                                                                      \
   NAME             = (TYPE) *(int  *) &(LIST -> head),                      \
     * NAME##_node  =         (void *)  (LIST -> head),                      \
     * NAME##_index = 0;                                                     \
                                                                             \
-  (int) NAME##_index < (LIST -> size) &&                                    \
+  (int) NAME##_index < (LIST -> elements) &&                                \
   ((NAME = (TYPE) *(int *) &((ListNode *) NAME##_node) -> value) || true);  \
                                                                             \
   NAME##_index   = ((void *) NAME##_index + 1),                             \

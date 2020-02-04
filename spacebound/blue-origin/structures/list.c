@@ -1,20 +1,17 @@
 
 #include "../include/program.h"
 
-ListNode * list_create_node(void * value) {
-  ListNode * node = malloc(sizeof(*node));
+local ListNode * list_create_node(void * value) {      // creates node storing value
+  ListNode * node = calloc(1, sizeof(*node));
   node -> value = value;
-  node -> next = NULL;
-  node -> prev = NULL;
   return node;
 }
 
-List * list_create() {
+List * list_create() {                                 // creates an empty list
   return calloc(1, sizeof(List));
 }
 
-List * list_from(int nargs, ...) {
-  // creates a list from arguments
+List * list_from(int nargs, ...) {                     // creates a list holding the arguments
   
   List * list = list_create();
   
@@ -28,26 +25,22 @@ List * list_from(int nargs, ...) {
   return list;
 }
 
-List * list_that_frees(freer value_free) {
-  // specifies a free-ing function that gets called on each
-  // node's datum when deleting the list.
-  
+List * list_that_frees(freer value_free) {             // creates a list that frees its elements
   List * list = list_create();
   list -> value_free = value_free;
   return list;
 }
 
-void list_insert(List * list, void * value) {
-  // inserts node at the tail in constant time
+void list_insert(List * list, void * value) {          // inserts node at the tail in O(1)
   
-  list -> size++;
+  list -> elements++;
   
   ListNode * node = list_create_node(value);
   
-  if (list -> head == NULL) {
-    list -> head = node;
-    node -> prev = node;
-    node -> next = node;
+  if (!list -> head) {
+    list -> head = node;                               // a list with only 1 node points to itself
+    node -> prev = node;                               // ----------------------------------------
+    node -> next = node;                               // ----------------------------------------
     return;
   }
   
@@ -58,32 +51,14 @@ void list_insert(List * list, void * value) {
   list -> head -> prev = node;
 }
 
-void list_insert_first(List * list, void * value) {
-  // Inserts node at the head in constant time
-  
-  list -> size++;
-  
-  ListNode * node = list_create_node(value);
-  
-  if (list -> head == NULL) {
-    list -> head = node;
-    node -> prev = node;
-    node -> next = node;
-    return;
-  }
-  
-  node -> next = list -> head;
-  node -> prev = list -> head -> prev;
-  
-  list -> head -> prev -> next = node;
-  list -> head -> prev = node;
-  list -> head = node;
+void list_insert_first(List * list, void * value) {    // inserts node at the head in O(1)
+  list_insert(list, value);                            // insert into the list, but roll the tail
+  list -> head = list -> head -> prev;                 // ---------------------------------------
 }
 
-void * list_retrieve(List * list, int index) {
-  // retrieves the ith element in the list
+void * list_retrieve(List * list, int index) {         // retrieves the ith element in the list in O(n)
   
-  if (unlikely(index >= list -> size))
+  if (unlikely(index >= list -> elements))
     exit_printing(ERROR_PROGRAMMER, "list_retrieve: index out of bounds");
   
   for (iterate(list, void *, entry))
@@ -93,57 +68,24 @@ void * list_retrieve(List * list, int index) {
   exit_printing(ERROR_PROGRAMMER, "list corruption observed when retrieving element %d", index);
 }
 
-void list_concat(List * first, List * other) {
-  // concatenates two lists
+void list_remove(List * list, ListNode * node) {       // removes a node from the list in O(1), freeing if necessary
   
-  if (!other) return;    // nothing to concatenate
-  else if (!first) {
-    first = list_create();
-    first -> head = other -> head;
-    first -> size = other -> size;
-    return;
-  }
-  else if (!first -> head) {
-    first -> head = other -> head;
-    first -> size = other -> size;
-    return;
-  }
+  node -> next -> prev = node -> prev;                 // Drop out of DLL
+  node -> prev -> next = node -> next;                 // ---------------
   
-  ListNode * other_tail = other -> head -> prev;
+  if (node == list -> head)                            // Advance head if necessary
+    list -> head = node -> next;                       // -------------------------
   
-  first -> head -> prev -> next = other -> head;
-  other -> head -> prev -> next = first -> head;
-  other -> head -> prev         = first -> head -> prev;
-  first -> head -> prev         = other_tail;
-  
-  first -> size += other -> size;
-}
-
-void list_remove(List * list, ListNode * node) {
-  // removes a node from the list in constant time
-  
-  node -> next -> prev = node -> prev;   // Drop out of DLL
-  node -> prev -> next = node -> next;   // ---------------
-  
-  if (node == list -> head)
-    list -> head = node -> next;       // Advance head
-  
-  if (--list -> size == 0) list -> head = NULL;
+  if (--list -> elements == 0) list -> head = NULL;
   
   if (list -> value_free) (list -> value_free)(node -> value);
   free(node);
 }
 
-void list_empty(List * list) {
-  // removes all size in the list
+void list_delete(List * list) {                        // completely delete the list and its elements
   
-  while (list -> size)
+  while (list -> elements)
     list_remove(list, list -> head);
-}
-
-void list_delete(List * list) {
-  // completely deletes the list
   
-  list_empty(list);
   free(list);
 }

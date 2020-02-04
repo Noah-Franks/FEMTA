@@ -47,7 +47,7 @@ Sensor ds32 1Hz {
     enter oscillator after 6s;
   }
   
-  if (State oscillator | clock > 4s | forever, reverse) {
+  if (State oscillator | clock > 4s | forever) {
     
     set pin 7 pos;
     set pin 7 neg after 3s;
