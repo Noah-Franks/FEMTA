@@ -40,6 +40,23 @@ local float take(  MB,    B) (float x) { return x * 1048576.0f;                 
 local float take(  KB,   MB) (float x) { return x / 1024.0f;                           }
 local float take(  MB,   KB) (float x) { return x * 1024.0f;                           }
 
+// resistance
+local float take( Ohm, kOhm) (float x) { return x / 1000.0f;                           }
+local float take(kOhm,  Ohm) (float x) { return x * 1000.0f;                           }
+
+// length
+local float take(   m,   ft) (float x) { return x * 3.28f;                             }
+local float take(  ft,    m) (float x) { return x / 3.28f;                             }
+
+// mass
+local float take(  kg,  lbs) (float x) { return x * 2.2f;                              }
+local float take( lbs,   kg) (float x) { return x / 2.2f;                              }
+
+// current
+local float take(   A,   mA) (float x) { return x * 1000.0f;                           }
+local float take(  mA,    A) (float x) { return x / 1000.0f;                           }
+
+
 local Hashmap * conversions;    // internally known, common conversions between units of the same type
 local Hashmap * unit_types;     // the type associated with each unit
 local List    * all_units;      // names for all the units known
@@ -79,6 +96,15 @@ void init_units() {
   hashmap_add(conversions, arrow(  MB,    B), take(  MB,    B));
   hashmap_add(conversions, arrow(  KB,   MB), take(  KB,   MB));
   hashmap_add(conversions, arrow(  MB,   KB), take(  MB,   KB));
+  hashmap_add(conversions, arrow( Ohm, kOhm), take( Ohm, Kohm));
+  hashmap_add(conversions, arrow(kOhm,  Ohm), take(kOhm,  Ohm));
+  hashmap_add(conversions, arrow(   m,   ft), take(  cm,   ft));
+  hashmap_add(conversions, arrow(  ft,    m), take(  ft,    m));
+  hashmap_add(conversions, arrow(  kg,  lbs), take(  kg,  lbs));
+  hashmap_add(conversions, arrow( lbs,   kg), take( lbs,   kg));
+  hashmap_add(conversions, arrow(   A,   mA), take(   A,   mA));
+  hashmap_add(conversions, arrow(  mA,    A), take(  mA,    A));
+
   
   hashmap_add(unit_types,    "C", "Temperature");
   hashmap_add(unit_types,    "K", "Temperature");
@@ -95,11 +121,20 @@ void init_units() {
   hashmap_add(unit_types,    "i",     "Integer");
   hashmap_add(unit_types,    "f",     "Decimal");
   hashmap_add(unit_types,    "B",     "Storage");
-  hashmap_add(unit_types,   "KB",     "Storage");
-  hashmap_add(unit_types,   "MB",     "Storage");
+  hashmap_add(unit_types,  "Ohm",  "Resistance");
+  hashmap_add(unit_types, "kOhm",  "Resistance");
+  hashmap_add(unit_types,    "m",      "Length");
+  hashmap_add(unit_types,   "ft",      "Length");
+  hashmap_add(unit_types,   "kg",        "Mass");
+  hashmap_add(unit_types,  "lbs",        "Mass");
+  hashmap_add(unit_types,   "cd",     "LightIntensity");
+  hashmap_add(unit_types,    "A",     "Current");
+  hashmap_add(unit_types,   "mA",     "Current");
+  hashmap_add(unit_types,  "mol",     "AmountOfSubstance");
+
   
   all_units = list_from
-    (16, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB");
+    (26, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB", "Ohm", "kOhm", "m", "ft", "kg", "lbs", "cd", "A", "mA", "mol");
 }
 
 void drop_units() {
@@ -147,6 +182,28 @@ void print_units_supported() {
      "Voltage\n"
      "   V   : Volts\n"
      "  mV   : milli-Volts\n"
+
+     "Resistance\n"
+     "  Ohm  : Ohms\n"
+     " kOhm  : kilo-Ohms\n"
+
+     "Length\n"
+     "   m   : Meters\n"
+     "  ft   : feet\n"
+    
+     "Mass\n"
+     "  kg  : kilo-Grams\n"
+     " lbs  : Pounds\n"
+
+     "LightIntensity\n"
+     "  cd  : Candelas\n"
+
+     "Current\n"
+     "  A  : Amperes\n"
+     " mA  : mili-Amperes\n"
+
+     "AmountOfSubstance\n"
+     "  mol  : Moles\n"
      );
 }
 
