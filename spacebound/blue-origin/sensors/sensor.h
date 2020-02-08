@@ -94,7 +94,6 @@ typedef struct Schedule {
   
   List * i2c_devices;           // list of all i2c device pointers
   List * one_devices;           // list of all 1-wire device pointers
-  List * pulse_pins;            // list of all pins that may pulse
   
   FILE * i2c_error_log;         // bus error logs
   FILE * one_error_log;         // --------------

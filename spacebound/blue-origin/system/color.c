@@ -1,7 +1,7 @@
 
 #include "../include/program.h"
 
-local Hashmap * colors_by_name;
+local Hashmap * colors_by_name;    // map of name strings to color codes
 
 void init_color() {
   

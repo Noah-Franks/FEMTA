@@ -1,5 +1,8 @@
 #pragma once
 
+/* Since this is a console program, we define "color" as the *
+ * control sequence necessary to change the terminal's color */
+
 #define RED     "\e[31m"
 #define GREEN   "\e[32m"
 #define YELLOW  "\e[33m"

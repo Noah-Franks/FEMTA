@@ -274,8 +274,8 @@ EffectNode * add_delay(EffectNode * effect, Numeric * delay) {
     if (effect -> is_charge) effect -> charge     -> delay = (int) effect -> delay_ms;
     else                     effect -> transition -> delay = (int) effect -> delay_ms;
     
-    if (effect -> is_charge) pin_inform_delays(effect -> charge -> gpio);
-    else                     state_inform_delays(effect -> transition -> state);
+    if (!effect -> is_charge)
+      state_inform_delays(effect -> transition -> state);
     
     blank(delay);
     return effect;

@@ -230,27 +230,11 @@ void * i2c_main() {
     
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
-    
-    // pulse pins
-    for (iterate(schedule -> pulse_pins, Pin *, pin)) {
-      
-      //printf("DEBUG WIRE: %d " YELLOW "%d" RESET "\n", pin -> broadcom, pin -> ms_until_pulse_completes);
-      
-      when (pin -> ms_until_pulse_completes);
-      
-      pin -> ms_until_pulse_completes -= bus_interval_ms;
-      
-      if (pin -> ms_until_pulse_completes <= 0) {
-        pin_set(pin -> broadcom, pin -> pulse_final_state);
-        pin -> ms_until_pulse_completes = 0;
-      }
-    }
-    
+    actuate(bus_interval_ms);    // process gpios waiting for changes
+    //flow
     
     // change states
     for (iterate(state_delays -> all, StateDelay *, state_delay)) {
-      
-      //printf("DEBUG STATE: %s " CYAN "%d" RESET "\n", state_delay -> state, state_delay -> ms_remaining);
       
       when (state_delay -> ms_remaining);
       

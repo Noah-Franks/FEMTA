@@ -3,8 +3,6 @@
 #include "headers.h"
 
 // clock.c (system)
-extern  void   real_sleep    (time_t seconds        );
-extern  void   milli_sleep   (long ms               );
 extern  void   micro_sleep   (long us               );
 extern  void   nano_sleep    (long ns               );
 extern  long   real_time_diff(struct timespec * past);
@@ -22,16 +20,12 @@ extern  FILE * safe_open(char * path, char * mode       );
 extern  bool   scan_file(char * path, char * format, ...);
 
 // gpio.c (system)
-extern  void   init_pins         (void                        );
-extern  void   drop_pins         (void                        );
-extern  void   pin_set           (char broadcom, bool hot     );
-extern  void   pin_inform_delays (char broadcom               );
-extern  void   pin_set_hot       (void * nil, char * vbroadcom);
-extern  void   pin_set_cold      (void * nil, char * vbroadcom);
-extern  void   fire              (Charge * charge, bool hot   );
-extern  char * recover_from_crash(void                        );
+extern  void   actuate           (int duration                );    // process delayed actuations
+extern  void   pin_set           (char gpio, bool hot         );    // set a pin hot or cold
+extern  void   gpio_set          (PinChange * change, bool hot);    // set a complex pin change
+extern  char * recover_from_crash(void                        );    // run this in gdb after crash
 
-// hashmap.h (structure)
+// hashmap.c (structure)
 extern  int       hash_string       (void *  string, u32 upper_bound        );     // hash any string
 extern  int       hash_address      (void * address, u32 upper_bound        );     // hash any address
 extern  int       compare_strings   (void * first, void * other             );     // see if strings are equal

@@ -3,7 +3,7 @@
 
 void exit_printing(int code, ...) {
   // prints a colored message to the console,
-  // and then exits safely by closing pigpio.
+  // closes pigpio, and then exits.
   
   va_list args;
   va_start(args, code);
@@ -17,6 +17,6 @@ void exit_printing(int code, ...) {
   
   va_end(args);
   
-  gpioTerminate();
-  exit(code);
+  gpioTerminate();    // release the gpio daemon
+  exit(code);         // terminate the process
 }

@@ -96,9 +96,9 @@ void init_units() {
   hashmap_add(conversions, arrow(  MB,    B), take(  MB,    B));
   hashmap_add(conversions, arrow(  KB,   MB), take(  KB,   MB));
   hashmap_add(conversions, arrow(  MB,   KB), take(  MB,   KB));
-  hashmap_add(conversions, arrow( Ohm, kOhm), take( Ohm, Kohm));
+  hashmap_add(conversions, arrow( Ohm, kOhm), take( Ohm, kOhm));
   hashmap_add(conversions, arrow(kOhm,  Ohm), take(kOhm,  Ohm));
-  hashmap_add(conversions, arrow(   m,   ft), take(  cm,   ft));
+  hashmap_add(conversions, arrow(   m,   ft), take(   m,   ft));
   hashmap_add(conversions, arrow(  ft,    m), take(  ft,    m));
   hashmap_add(conversions, arrow(  kg,  lbs), take(  kg,  lbs));
   hashmap_add(conversions, arrow( lbs,   kg), take( lbs,   kg));
@@ -127,10 +127,10 @@ void init_units() {
   hashmap_add(unit_types,   "ft",      "Length");
   hashmap_add(unit_types,   "kg",        "Mass");
   hashmap_add(unit_types,  "lbs",        "Mass");
-  hashmap_add(unit_types,   "cd",     "LightIntensity");
+  hashmap_add(unit_types,   "cd",   "Intensity");
   hashmap_add(unit_types,    "A",     "Current");
   hashmap_add(unit_types,   "mA",     "Current");
-  hashmap_add(unit_types,  "mol",     "AmountOfSubstance");
+  hashmap_add(unit_types,  "mol",    "Quantity");
 
   
   all_units = list_from

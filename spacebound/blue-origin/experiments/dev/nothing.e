@@ -5,3 +5,4 @@
  *   nothing should happen in terms of logging
  */
 
+define enter start;

@@ -49,12 +49,10 @@ typedef pthread_mutex_t  Mutex;
 typedef struct AD15_Config AD15_Config;
 
 // gpio.h (system)
-typedef struct Charge Charge;
-typedef struct Pin Pin;
+typedef struct PinChange PinChange;
 
 // hashmap.h (structure)
 typedef struct Hashmap Hashmap;
-typedef struct HashmapElement HashmapElement;
 
 // i2c.h (system)
 typedef struct i2c_device i2c_device;
@@ -87,7 +85,6 @@ typedef struct SeriesElement SeriesElement;
 // hashmap.h (structure)
 typedef int  (* hash_function  )(void *, u32 upper_bound   );
 typedef int  (* key_comparator )(void * first, void * other);
-typedef void (* element_printer)(HashmapElement * element  );
 
 // i2c.h (system)
 typedef bool (* i2c_reader)(i2c_device * i2c);

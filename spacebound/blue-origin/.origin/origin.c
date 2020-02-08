@@ -33,7 +33,6 @@ int main(int nargs, char ** args) {
   
   init_color();       // set up colorized printing to the console
   init_units();       // set up unit conversions and calibration structures
-  init_pins();        // set up gpio data structures
   init_states();      // set up the state system and delay tracking info
   init_one();         // set up the 1-wire data structures
   init_i2c();         // set up the i2c data structures
@@ -60,7 +59,6 @@ int main(int nargs, char ** args) {
   drop_i2c();         // delete i2c bus structures
   drop_one();         // delete 1-wire bus structures
   drop_states();      // delete the state system
-  drop_pins();        // delete gpio structures
   drop_units();       // delete unit structures
   drop_color();       // delete color structures
   

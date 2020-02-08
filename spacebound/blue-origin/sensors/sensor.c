@@ -431,8 +431,8 @@ void sensor_process_triggers(Sensor * sensor) {
       if ( trigger -> less && measure > threshold) continue;                       // means condition is not true
       if (!trigger -> less && measure < threshold) continue;                       // ---------------------------
       
-      for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge, false);
-      for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, true );
+      for (iterate(trigger -> wires_low , PinChange *, change)) gpio_set(change, false);
+      for (iterate(trigger -> wires_high, PinChange *, change)) gpio_set(change, true );
       
       for (iterate(trigger -> enter_set, Transition *, trans)) enter(trans);
       for (iterate(trigger -> leave_set, Transition *, trans)) leave(trans);
