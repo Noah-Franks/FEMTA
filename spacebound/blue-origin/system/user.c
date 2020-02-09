@@ -1,16 +1,16 @@
 
 #include "../include/program.h"
 
-local void output_str(void * nil, char * text) {      /* print a message to the console */
+local void output_str(void * nil, char * text) {      // print a message to the console
   if (strlen(text) < 2) printf("user message: \n");
   else                  printf("user message: %s\n", text + 1);
 }
 
-local void flip_bool(void * pointer, char * nil) {    /* Flips a boolean value          */
+local void flip_bool(void * pointer, char * nil) {    // Flips a boolean value
   *(bool *) pointer = ! *(bool *) pointer;
 }
 
-local void user_set_pin(void * nil, char * text) {    /* Set a pin (Ex: +18 or -16)     */
+local void user_set_pin(void * nil, char * text) {    // Set a pin (Ex: +18 or -16)
   
   bool hot      = text[0] == '+';
   char broadcom = atoi(text + 1);
@@ -19,7 +19,7 @@ local void user_set_pin(void * nil, char * text) {    /* Set a pin (Ex: +18 or -
 }
 
 
-void present_interface() {
+void present_interface() {                            // allow the user to command the process
   
   prctl(PR_SET_NAME, "Console", NULL, NULL, NULL);
   

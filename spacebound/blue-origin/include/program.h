@@ -3,26 +3,27 @@
 #include "headers.h"
 
 // clock.c (system)
-extern  void   micro_sleep   (long us               );
-extern  void   nano_sleep    (long ns               );
-extern  long   real_time_diff(struct timespec * past);
+extern  void   micro_sleep   (long us               );    // sleep a number of microseconds
+extern  void   nano_sleep    (long ns               );    // sleep a number of nanoseconds
+extern  long   real_time_diff(struct timespec * past);    // get nanoseconds since a point in the past
 
 // color.c (system)
-extern  void   init_color       (void       );
-extern  void   drop_color       (void       );
-extern  char * get_color_by_name(char * name);
+extern  void   init_color       (void       );    // set up the color system
+extern  void   drop_color       (void       );    // let go of the color system
+extern  char * get_color_by_name(char * name);    // takes names to bash color codes
 
 // error.c (system)
-extern  void   exit_printing(int code, ...) opt(noreturn);
+extern  void   exit_printing(int code, ...     ) opt(noreturn);    // safely exit after printing
+extern  void   print_error  (char * format, ...);                  // print an error message
 
 // file.c (system)
-extern  FILE * safe_open(char * path, char * mode       );
-extern  bool   scan_file(char * path, char * format, ...);
+extern  FILE * safe_open(char * path, char * mode       );    // ensure a file can actually be opened
+extern  bool   scan_file(char * path, char * format, ...);    // dump a (best virtual) file into args
 
 // gpio.c (system)
-extern  void   actuate           (int duration                );    // process delayed actuations
+extern  void   process_pin_queue (int duration                );    // process delayed actuations
 extern  void   pin_set           (char gpio, bool hot         );    // set a pin hot or cold
-extern  void   gpio_set          (PinChange * change, bool hot);    // set a complex pin change
+extern  void   pin_queue         (PinChange * change, bool hot);    // set a complex pin change
 extern  char * recover_from_crash(void                        );    // run this in gdb after crash
 
 // hashmap.c (structure)
@@ -62,17 +63,18 @@ extern  void   list_remove      (List * list, ListNode * node);  // removes a no
 extern  void   list_delete      (List * list                 );  // completely deletes the list and its elements
 
 // math.c (math)
-extern  int    gcd(int a, int b) opt(const);
+extern  int    gcd(int a, int b) opt(const);    // compute the greatest common factor
 
 // memory.c (tests)
-extern  void * debug_malloc          (size_t size                             );
-extern  void * debug_calloc          (size_t nmemb, size_t size               );
-extern  char * debug_strdup          (const char * s                          );
-extern  void   debug_free            (void * pointer                          );
-extern  FILE * debug_fopen           (const char * pathname, const char * mode);
-extern  int    debug_fclose          (FILE * stream                           );
-extern  int    debug_yylex_destroy   (void                                    );
-extern  void   print_usage_debug_info(void                                    );
+extern  void * debug_malloc          (size_t size                             );  // debug versions
+extern  void * debug_calloc          (size_t nmemb, size_t size               );  // --------------
+extern  void * debug_realloc         (void * pointer, size_t size             );  // --------------
+extern  char * debug_strdup          (const char * s                          );  // --------------
+extern  void   debug_free            (void * pointer                          );  // --------------
+extern  FILE * debug_fopen           (const char * pathname, const char * mode);  // --------------
+extern  int    debug_fclose          (FILE * stream                           );  // --------------
+extern  int    debug_yylex_destroy   (void                                    );  // --------------
+extern  void   print_usage_debug_info(void                                    );  // print stats to console
 
 // one.c (system)
 extern  void         init_one         (void                                                          );
@@ -120,20 +122,14 @@ extern  int   simulation_gpio_write              (uint8 broadcom, uint8 level);
 extern  bool  simulation_report_containment_error(void * nil, ...            ) opt(noreturn);
 
 // state.c (system)
-extern  void         init_states        (void                      );
-extern  void         drop_states        (void                      );
-extern  void         print_all_states   (void                      );
-extern  void         add_state          (char * state, bool entered);
-extern  bool         state_exists       (char * state              );
-extern  void         enter_state        (char * state              );
-extern  void         leave_state        (char * state              );
-extern  void         enter              (Transition * trans        );
-extern  void         leave              (Transition * trans        );
-extern  bool         state_get          (char * state              );
-extern  Transition * transition_create  (char * state, int delay   );
-extern  void         transition_delete  (void * vtrans             );
-extern  void         state_inform_delays(char * state              );
-
+extern  void    drop_states        (void                            );    // remove all states
+extern  State * state_create       (char * name,          bool enter);    // track a new state
+extern  State * state_get          (char * name                     );    // get a state, if it exists O(n)
+extern  void    state_set          (State * state,        bool enter);    // set a state
+extern  void    state_queue        (StateChange * change, bool enter);    // queue a state change
+extern  void    process_state_queue(int duration                    );    // process delayed changes
+extern  void    print_all_states   (void                            );    // nicely print every state
+  
 // units.c (math)
 extern  void            init_units                     (void                               );
 extern  void            drop_units                     (void                               );
@@ -153,11 +149,12 @@ extern  void            series_delete                  (List * series           
 extern  float           convert_identity               (float x                            ) opt(const);
 
 // user.c (system)
-extern  void  present_interface(void);
+extern  void  present_interface(void);    // allow the user to command the process
 
 #ifdef DEBUG_MODE
 #define malloc        debug_malloc
 #define calloc        debug_calloc
+#define realloc       debug_realloc
 #define strdup        debug_strdup
 #define free          debug_free
 #define fopen         debug_fopen

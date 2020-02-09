@@ -416,8 +416,8 @@ void sensor_process_triggers(Sensor * sensor) {
     for (iterate(output -> triggers, Trigger *, trigger)) {
       
       bool precondition_met = true;
-      for (iterate(trigger -> precondition, char *, state)) {
-        if (!state_get(state)) {
+      for (iterate(trigger -> precondition, State *, state)) {
+        if (!state -> entered) {
           precondition_met = false;
           break;
         }
@@ -431,11 +431,11 @@ void sensor_process_triggers(Sensor * sensor) {
       if ( trigger -> less && measure > threshold) continue;                       // means condition is not true
       if (!trigger -> less && measure < threshold) continue;                       // ---------------------------
       
-      for (iterate(trigger -> wires_low , PinChange *, change)) gpio_set(change, false);
-      for (iterate(trigger -> wires_high, PinChange *, change)) gpio_set(change, true );
+      for (iterate(trigger -> wires_low , PinChange *, change)) pin_queue(change, false);
+      for (iterate(trigger -> wires_high, PinChange *, change)) pin_queue(change, true );
       
-      for (iterate(trigger -> enter_set, Transition *, trans)) enter(trans);
-      for (iterate(trigger -> leave_set, Transition *, trans)) leave(trans);
+      for (iterate(trigger -> enter_set, StateChange *, change)) state_queue(change, true );
+      for (iterate(trigger -> leave_set, StateChange *, change)) state_queue(change, false);
       
       trigger -> fired = true;
     }

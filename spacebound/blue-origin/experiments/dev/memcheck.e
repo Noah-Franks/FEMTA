@@ -38,7 +38,7 @@ Sensor ds32 1Hz {
   
   [calibrate   | clock, poly, raw, ms | 0.9765625, 0.0];
   [conversions | clock, raw, ms, s    |               ];
-  [smooth      | clock                |            0.1];
+  [smooth      | clock                |           0.25];
   [print       | pink, clock          |               ];
   
   if (State start | clock < 1s | single) {

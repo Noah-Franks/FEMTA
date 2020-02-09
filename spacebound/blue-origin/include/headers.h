@@ -50,6 +50,7 @@ typedef struct AD15_Config AD15_Config;
 
 // gpio.h (system)
 typedef struct PinChange PinChange;
+typedef struct Pin Pin;
 
 // hashmap.h (structure)
 typedef struct Hashmap Hashmap;
@@ -71,8 +72,8 @@ typedef struct Trigger Trigger;
 typedef struct Schedule Schedule;
 
 // state.h (system)
-typedef struct Transition Transition;
-typedef struct StateDelay StateDelay;
+typedef struct StateChange StateChange;
+typedef struct State State;
 
 // units.h (math)
 typedef struct Numeric Numeric;

@@ -33,7 +33,6 @@ int main(int nargs, char ** args) {
   
   init_color();       // set up colorized printing to the console
   init_units();       // set up unit conversions and calibration structures
-  init_states();      // set up the state system and delay tracking info
   init_one();         // set up the 1-wire data structures
   init_i2c();         // set up the i2c data structures
   init_sensors();     // set up sensor info and actions

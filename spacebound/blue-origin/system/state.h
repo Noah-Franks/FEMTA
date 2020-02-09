@@ -1,18 +1,18 @@
 #pragma once
 
-typedef struct Transition {
+typedef struct State {          // a flowchart state
   
-  char * state;           // the broadcom number of the pin
-  int    delay;           // used for delayed state changes
+  char * name;                  // the state's name
+  bool   entered;               // whether system is in the state
   
-} Transition;
-
-typedef struct StateDelay {
-
-  char * state;           // the state whose transition is under this delay
-  int    ms_remaining;    // remaining ms before state change
-  bool   entering;        // whether state should be entered
+  int  queued_delay;            // ms remaining until state change
+  bool queued_enter;            // whether to enter after delay
   
-} StateDelay;
+} State;
 
-extern Hashmap * state_delays;
+typedef struct StateChange {    // specifies a state transition
+  
+  State * state;                // the state to change
+  int     delay;                // used for delayed state changes
+  
+} StateChange;

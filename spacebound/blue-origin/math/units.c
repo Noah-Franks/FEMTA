@@ -330,7 +330,7 @@ static float compute_curve(float x, Calibration * calibration) {
     
     float log_x = log(x);    // need to compute Iset
     
-    return 1.0f / (A + B * log_x + C * cube(log_x));
+    return 1.0f / (A + B * log_x + C * log_x * log_x * log_x);
   }
   
   exit_printing(ERROR_PROGRAMMER, "Tried to evaluate unknown curve " CYAN "%s", curve);
