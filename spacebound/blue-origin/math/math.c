@@ -15,3 +15,7 @@ int gcd(int a, int b) {
   
   return g;
 }
+
+int lcm(int a, int b) {          // the least common multiple
+  return (a * b) / gcd(a, b);    // relationship between gcd and lcm
+}

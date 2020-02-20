@@ -468,20 +468,20 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   
   if (!proto)
     yyerror(CYAN "%s " RED "is not a sensor", id);
-    
+  
   blank(id);
-    
+  
   if (strcmp(frequency   -> units, "Hz") && strcmp(frequency   -> units, "i"))
     yyerror("Sensor frequency using %s is neither an integer nor a rational number of Hz", frequency -> units);
     
   if (denominator && strcmp(denominator -> units, "Hz") && strcmp(denominator -> units, "i"))
     yyerror("Sensor frequency using %s is neither an integer nor a rational number of Hz", denominator -> units);
     
-  proto -> hertz = frequency -> integer;    // base Hz for scheduling
-    
-  if (denominator) proto -> hertz_denominator = denominator -> integer;
-  else             proto -> hertz_denominator = 0;
-    
+  proto -> hertz_numerator = frequency -> integer;    // base Hz for scheduling
+  
+  if (denominator) proto -> hertz_denominator = denominator -> integer + (denominator -> integer == 0);
+  else             proto -> hertz_denominator = 1;
+  
   blank(frequency);
   blank(denominator);
     

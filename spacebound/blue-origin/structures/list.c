@@ -82,10 +82,11 @@ void list_remove(List * list, ListNode * node) {       // removes a node from th
   free(node);
 }
 
-void list_delete(List * list) {                        // completely delete the list and its elements
+void * list_delete(List * list) {                      // completely delete the list and its elements
   
   while (list -> elements)
     list_remove(list, list -> head);
   
   free(list);
+  return NULL;
 }

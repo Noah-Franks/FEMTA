@@ -31,7 +31,7 @@ void pin_queue(PinChange * change, bool hot) {          // induces a pin change,
   pins[change -> gpio].queued_hot   = hot;
 }
 
-void process_pin_queue(int duration) {                 // process any delayed actuations
+void process_pin_queue(int duration) {                  // process any delayed actuations
   
   for (int i = 0; i < 28; i++) {
     

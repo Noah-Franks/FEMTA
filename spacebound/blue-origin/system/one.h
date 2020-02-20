@@ -10,9 +10,8 @@ typedef struct one_device {
   FILE * log;              // log file
   
   int interval;            // time span between schedules in ms
-  int hertz;               // reads per second
+  int hertz_numerator;     // reads per second
   int hertz_denominator;   // engenders fractional frequency through deferrals
-  int bus_deferrals;       // how many bus deferrals since last read
   int count;               // counts since last read
   
   one_reader read;

@@ -76,10 +76,9 @@ typedef struct Sensor {
   Hashmap * targets;        // that which can be triggered (target str -> stream_index)
   Hashmap * aliases;        // alternative names for each channel
   
-  sensor_free teardown;     // how to free sensor
+  sensor_free teardown;     // how to free sensor  
   
-  
-  int hertz;                 // bus communication frequency in hertz
+  int hertz_numerator;       // bus communication frequency in hertz
   int hertz_denominator;     // engenders fractional frequency through deferrals
   
   bool requested;            // whether sensor has actually been specified during parsing
@@ -90,36 +89,6 @@ typedef struct Sensor {
   
 } Sensor;
 
-typedef struct Schedule {
-  
-  List * i2c_devices;           // list of all i2c device pointers
-  List * one_devices;           // list of all 1-wire device pointers
-  
-  FILE * i2c_error_log;         // bus error logs
-  FILE * one_error_log;         // --------------
-  FILE * control_log;           // transition/charge log (i2c bound for now)
-  
-  i2c_device * last_i2c_dev;    // last i2c sensor measured
-  one_device * last_one_dev;    // last 1-wire sensor measured
-  
-  long i2c_interval;            // scheduler spacing for the i2c protocol
-  long one_interval;            // scheduler spacing for the 1-wire protocol
-  
-  bool i2c_active;              // whether experiment uses i2c
-  bool one_active;              // whether experiment uses 1-wire
-  
-  bool print_sensors;           // whether any sensors print to the console
-  
-  int   interrupts;             // interrupts since schedule creation
-  float interrupt_interval;     // time between each interrupt
-  
-  Thread * i2c_thread;          // i2c thread
-  Thread * one_thread;          // 1-wire thread (deprioritized)
-  bool term_signal;             // when set to true, schedule terminates
-  
-} Schedule;
-
-extern Schedule * schedule;
 extern char *     time_unit;
 extern long       time_start_os;     // system start from the OS's perspective
 extern List    *  active_sensors;    // every active sensor on craft

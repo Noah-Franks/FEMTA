@@ -41,7 +41,7 @@ int main(int nargs, char ** args) {
   yyclean();          // delete Exp's lexical analyzer's remaining stack and debris
   print_config();     // print sensor, trigger, and state information to the experimenter
   
-  start_sensors();
+  build_schedule();
   if (schedule -> i2c_active) start_i2c();       // start reading the i2c bus
   if (schedule -> one_active) start_one();       // start reading the 1-wire bus
   

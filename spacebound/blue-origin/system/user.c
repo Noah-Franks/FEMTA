@@ -12,10 +12,10 @@ local void flip_bool(void * pointer, char * nil) {    // Flips a boolean value
 
 local void user_set_pin(void * nil, char * text) {    // Set a pin (Ex: +18 or -16)
   
-  bool hot      = text[0] == '+';
-  char broadcom = atoi(text + 1);
+  bool hot  = text[0] == '+';
+  char gpio = atoi(text + 1);
   
-  pin_set(broadcom, hot);
+  pin_set(gpio, hot);
 }
 
 

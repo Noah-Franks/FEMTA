@@ -65,11 +65,13 @@ typedef struct ListNode ListNode;
 // one.h (system)
 typedef struct one_device one_device;
 
+// schedule.h (system)
+typedef struct Schedule Schedule;
+
 // sensor.h (sensors)
 typedef struct Sensor Sensor;
 typedef struct Output Output;
 typedef struct Trigger Trigger;
-typedef struct Schedule Schedule;
 
 // state.h (system)
 typedef struct StateChange StateChange;
@@ -124,5 +126,6 @@ typedef void (* user_action)(void * arg, char * raw_text);
 #include "../system/gpio.h"
 #include "../system/i2c.h"
 #include "../system/one.h"
+#include "../system/schedule.h"
 #include "../system/state.h"
 #include "../.origin/origin.h"

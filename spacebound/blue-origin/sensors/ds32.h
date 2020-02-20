@@ -18,5 +18,5 @@
 
 #define DS32_ADDRESS 0x68
 
-extern char   human_time[32];    // formatted time that humans can read
+extern char   human_time[64];    // formatted time that humans can read
 extern char * ds32_time_unit;    // the time unit for the ds32

@@ -12,24 +12,15 @@ one_device * create_one_device(Sensor * sensor, char * path, char * log_path, on
   one -> log    = safe_open(log_path, "a");
   one -> read   = read;
   
-  if (!one -> log)
-    exit_printing(ERROR_OPERATING_SYSTEM,
-                  "Critical: could not open %d's log file %s\n", sensor -> name, log_path);
-  
-  one -> hertz             = sensor -> hertz;
+  one -> hertz_numerator   = sensor -> hertz_numerator;
   one -> hertz_denominator = sensor -> hertz_denominator;
   
-  if (one -> hertz)
-    one -> interval = 1000 / (one -> hertz);
+  if (one -> hertz_numerator)
+    one -> interval = schedule -> one_cycle / (one -> hertz_numerator);
   
-  if (!one -> hertz_denominator)
-    one -> hertz_denominator = 1;
-  
-  
-  // give a nice message to the user
-  
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%d", sensor -> name, one -> hertz);
-  if (one -> hertz_denominator) printf("/%d", one -> hertz_denominator);
+  // print a nice message for the user
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%d", sensor -> name, one -> hertz_numerator);
+  if (one -> hertz_denominator != 1) printf("/%d", one -> hertz_denominator);
   printf("Hz " RESET "via " BLUE "%s " RESET, path);
   if (sensor -> print) printf("with " MAGENTA "printing" RESET);
   printf("\nlogged in %s\n", log_path);

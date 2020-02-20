@@ -4,7 +4,6 @@
 local void sensor_close(void *);
 local void sensor_do_nothing(Sensor * nil) { return; }
 
-Schedule * schedule;
 char     * time_unit;
 long       time_start_os;     // system start from the OS's perspective
 List     * active_sensors;    // every active sensor on craft
@@ -48,8 +47,6 @@ void sensor_delete(void * vsensor) {
   
   Sensor * sensor = vsensor;
   
-  //printf("SENSOR: %s\n", sensor -> code_name);
-  
   for (int stream = 0; stream < sensor -> data_streams; stream++) {
     
     if (sensor -> outputs[stream].series)
@@ -74,11 +71,11 @@ void trigger_delete(void * vtrigger) {
   
   if (!trigger -> reverses) {
     
-    list_delete(trigger -> wires_low   );  trigger -> wires_low    = NULL;
-    list_delete(trigger -> wires_high  );  trigger -> wires_high   = NULL;
-    list_delete(trigger -> enter_set   );  trigger -> enter_set    = NULL;
-    list_delete(trigger -> leave_set   );  trigger -> leave_set    = NULL;
-    list_delete(trigger -> precondition);  trigger -> precondition = NULL;
+    trigger -> wires_low    = list_delete(trigger -> wires_low   );
+    trigger -> wires_high   = list_delete(trigger -> wires_high  );
+    trigger -> enter_set    = list_delete(trigger -> enter_set   );
+    trigger -> leave_set    = list_delete(trigger -> leave_set   );
+    trigger -> precondition = list_delete(trigger -> precondition);
     
     blank(trigger -> threshold_as_specified);
     blank(trigger -> id);
@@ -141,191 +138,15 @@ void init_sensors() {
   hashmap_add(all_sensors, "ad15_scl", sensor_create("ad15_scl", AD15_SCL, ad15_tar, I2C_BUS));
   
   all_target_maps = list_from(7, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, mcp9_tar, test_tar);
-  all_target_maps -> value_free = hashmap_delete;
+  all_target_maps -> value_free = vhashmap_delete;
+  
+  active_sensors = list_that_frees(sensor_close);
 }
 
 void drop_sensors() {
-  
-  list_delete(active_sensors);
-  active_sensors = NULL;
-  
-  hashmap_delete(all_sensors);
-  all_sensors = NULL;
-  
-  list_delete(all_target_maps);
-  all_target_maps = NULL;
-}
-
-void start_sensors() {
-  
-  int i2c_divisor = -1;
-  int one_divisor = -1;
-  
-  for (iterate(all_sensors -> all, Sensor *, proto)) {
-    
-    if (!proto -> requested || !proto -> hertz) continue;
-    
-    int interval = 1000 / proto -> hertz;
-    
-    if (interval * proto -> hertz != 1000)
-      exit_printing
-        (ERROR_EXPERIMENTER, "\n1000ms is not cleanly divided by %s's %dHz", proto -> code_name, proto -> hertz);
-    
-    switch (proto -> bus) {
-      
-    case I2C_BUS:
-      if (i2c_divisor == -1) i2c_divisor = interval;
-      i2c_divisor = gcd(interval, i2c_divisor);
-      break;
-      
-    case ONE_BUS:
-      if (one_divisor == -1) one_divisor = interval;
-      one_divisor = gcd(interval, one_divisor);
-      break;
-      
-    default:
-      printf(RED "Bus type %x not supported\n" RESET, proto -> bus);
-      break;
-    }
-  }
-  
-  
-  
-  if (i2c_divisor != -1) {
-    
-    printf("\nBuilding I2C sensor schedule using " GREEN "%dms" RESET " intervals\n\n", i2c_divisor);
-    
-    if (i2c_divisor < 10)
-      printf(RED "I2C schedule with divisor %dms is likely unserviceable.\n"
-             "Please consider more harmonious frequencies from below\n" RESET
-             "\t 1, 2, 4, 5, 10, 20, 25, 40, 50, 100, 125, 200, 250\n\n", i2c_divisor);
-    
-    schedule -> i2c_active = true;
-  }
-  
-  if (one_divisor != -1) {
-    
-    printf("\nBuilding 1-wire sensor schedule using " GREEN "%dms" RESET " intervals\n\n", one_divisor);
-    
-    if (one_divisor < 10)
-      printf(RED "1-Wire schedule with divisor %dms is likely unserviceable.\n"
-             "Please consider more harmonious frequencies from below\n" RESET
-             "\t 1, 2, 4, 5, 10, 20, 25, 40, 50, 100, 125, 200, 250\n\n", one_divisor);
-    
-    schedule -> one_active = true;
-  }
-  
-  schedule -> i2c_interval = i2c_divisor * 1000000;
-  schedule -> one_interval = one_divisor * 1000000;
-  
-  active_sensors = list_that_frees(sensor_close);
-  
-  
-  Sensor * proto;    // name of uninitialized sensor (See Invariant 0)
-  
-  /* i2c sensors */
-  
-  // ds32
-  proto = hashmap_get(all_sensors, "ds32");
-  
-  if (proto -> requested) {
-    Sensor * ds32 = init_ds32(proto);
-    list_insert(active_sensors         , ds32       );
-    list_insert(schedule -> i2c_devices, ds32 -> i2c);    // first so we can get the time
-  }
-  
-  // arm6
-  proto = hashmap_get(all_sensors, "arm6");
-  
-  if (proto -> requested) {
-    Sensor * arm6 = init_arm6(proto);
-    list_insert(active_sensors         , arm6       );
-    list_insert(schedule -> i2c_devices, arm6 -> i2c);
-  }
-  
-  // adxl
-  proto = hashmap_get(all_sensors, "adxl");
-  
-  if (proto -> requested) {
-    Sensor * adxl = init_adxl(proto);
-    list_insert(active_sensors         , adxl       );
-    list_insert(schedule -> i2c_devices, adxl -> i2c);
-  }
-  
-  // mcp9
-  proto = hashmap_get(all_sensors, "mcp9");
-  
-  if (proto -> requested) {
-    Sensor * mcp9 = init_mcp9(proto);
-    list_insert(active_sensors         , mcp9       );
-    list_insert(schedule -> i2c_devices, mcp9 -> i2c);
-  }
-  
-  // test
-  proto = hashmap_get(all_sensors, "test");
-  
-  if (proto -> requested) {
-    Sensor * test = init_test(proto);
-    list_insert(active_sensors         , test       );
-    list_insert(schedule -> i2c_devices, test -> i2c);
-  }
-  
-  // ad15
-  Sensor * ad15[4] = {
-    NULL, NULL, NULL, NULL,
-  };
-  
-  char * code_names[4] = {
-    "ad15_gnd", "ad15_vdd", "ad15_sda", "ad15_scl"
-  };
-  
-  for (int sensor_index = 0; sensor_index < 4; sensor_index++) {
-    
-    proto = hashmap_get(all_sensors, code_names[sensor_index]);
-    
-    if (proto -> requested) {
-      ad15[sensor_index] = init_ad15(proto, list_from(4, A0, A1, A2, A3));
-      list_insert(active_sensors, ad15[sensor_index]);
-    }
-  }
-  
-  for (int channel = 0; channel < 4; channel++)                     // interleave the schedules
-    for (int sensor_index = 0; sensor_index < 4; sensor_index++)    // ------------------------
-      if (ad15[sensor_index])
-        list_insert(schedule -> i2c_devices, ad15[sensor_index] -> i2c);
-  
-  
-  /* 1-wire sensors */
-  
-  // ds18
-  proto = hashmap_get(all_sensors, "ds18");
-  
-  if (proto -> requested) {
-    //Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-000008e222e7/w1_slave");
-    //Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-0115a6756cff/w1_slave");
-    Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-000008e3f48b/w1_slave");
-    //Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-0315a66ea4ff/w1_slave");
-    list_insert(active_sensors,          ds18       );
-    list_insert(schedule -> one_devices, ds18 -> one);
-  }
-  
-  
-  /* see if we can disable printing */
-  
-  bool some_sensor_prints = false;
-  
-  for (iterate(active_sensors, Sensor *, sensor))
-    if (sensor -> print)
-      some_sensor_prints = true;
-  
-  schedule -> print_sensors = some_sensor_prints && print_to_console;
-}
-
-float time_passed() {
-  
-  //return (schedule -> interrupts) * (schedule -> interrupt_interval);
-  //return (float) real_time_diff(&time_start_os) / 1E9;
-  return (float) (time(NULL) - time_start_os);
+  all_target_maps = list_delete(all_target_maps);
+  active_sensors  = list_delete(active_sensors);
+  all_sensors     = hashmap_delete(all_sensors);
 }
 
 void sensor_close(void * vsensor) {
@@ -396,6 +217,36 @@ void sensor_log_outputs(Sensor * sensor, FILE * file, char * addendum) {
   
   if (addendum) fprintf(file, "\t%s\n", addendum);
   else          fprintf(file,     "\n"          );
+}
+
+void consider_printing_sensors(int duration) {
+  local int print_delay = 0;
+  
+  if (!schedule -> print_sensors || (print_delay -= duration) > 0)
+    return;
+  
+  print_delay = console_print_interval;
+  
+  printf(GREY "% 7.3lf%s  ", time_passed(), time_unit);
+  
+  for (iterate(active_sensors, Sensor *, sensor)) {
+    
+    when (sensor -> print);
+    
+    for (int stream = 0; stream < sensor -> data_streams; stream++) {
+      
+      Output * output = &sensor -> outputs[stream];
+      
+      when (output -> print);
+      
+      printf("%s% *.*f%s  ", output -> print_code,
+             output -> print_places + strlen(output -> unit) + 4,
+             output -> print_places,
+             output -> measure, output -> unit);
+    }
+  }
+  
+  printf("\n" RESET);
 }
 
 void sensor_process_triggers(Sensor * sensor) {

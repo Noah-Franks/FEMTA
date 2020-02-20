@@ -5,7 +5,7 @@ local bool read_ds32    (i2c_device * ds32_i2c           );    // how to read fr
 local void set_time_ds32(Sensor * ds32                   );    // set the human-readable formatted time
 local void schedule_tick(int gpio, int level, uint32 tick);    // increment schedule interrupt counter
 
-char   human_time[32];                                         // formatted time that humans can read
+char   human_time[64];                                         // formatted time that humans can read
 char * ds32_time_unit;                                         // the time unit for the ds32
 
 Sensor * init_ds32(Sensor * ds32) {
@@ -46,7 +46,7 @@ Sensor * init_ds32(Sensor * ds32) {
   if (!i2c_write_byte(ds32 -> i2c, 0x0E, 0b01101000))
     printf(RED "Could not enable ds32 square waves!\n" RESET);
   
-  gpioSetISRFunc(20, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
+  gpioSetISRFunc(17, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
   read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
   
   return ds32;

@@ -2,7 +2,7 @@
 #include "../include/program.h"
 
 #define I2C_NOT_REGISTERED -1    // i2c address available, but not registered
-#define I2C_NOT_ALLOWED    -2    // i2c address not allowed
+#define I2C_NOT_ALLOWED    -2    // i2c address not allowed (may be used for faking, though)
 
 #ifdef SIMULATION_MODE           // prevent preprocessor attack
 #undef i2c_read_byte             // ---------------------------
@@ -25,14 +25,11 @@ i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {       // cr
   i2c -> read     = reader;
   
   i2c -> address           = sensor -> address;
-  i2c -> hertz             = sensor -> hertz;
+  i2c -> hertz_numerator   = sensor -> hertz_numerator;
   i2c -> hertz_denominator = sensor -> hertz_denominator;
   
-  if (i2c -> hertz)
-    i2c -> interval = 1000 / (i2c -> hertz);
-  
-  if (!i2c -> hertz_denominator)
-    i2c -> hertz_denominator = 1;
+  if (i2c -> hertz_numerator)
+    i2c -> interval = schedule -> i2c_cycle / (i2c -> hertz_numerator);
   
   if (handles[i2c -> address] == I2C_NOT_REGISTERED &&                     // register new i2c instance
       handles[i2c -> address] != I2C_NOT_ALLOWED      )                    // -------------------------
@@ -41,8 +38,9 @@ i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {       // cr
   i2c -> handle = handles[i2c -> address];
   
   // print a nice message for the user
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-         sensor -> name, sensor -> hertz, i2c -> address);
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%d", sensor -> name, sensor -> hertz_numerator);
+  if (i2c -> hertz_denominator != 1) printf("/%d", sensor -> hertz_denominator);
+  printf("Hz " RESET "on " BLUE "0x%x " RESET, i2c -> address);
   if (sensor -> print) printf("with " MAGENTA "printing\n" RESET);
   else                 printf("\n");
   
@@ -185,11 +183,7 @@ void * i2c_main() {
   FILE * i2c_log = safe_open("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
   
-  long bus_interval    = schedule -> i2c_interval;
-  long bus_interval_ms = schedule -> i2c_interval / 1000000;
-  
   long last_read_duration = 0;                                              // tracks time taken to read i2c bus
-  long print_delay        = bus_interval_ms;                                // time before next console print
   
   while (!schedule -> term_signal) {
     
@@ -198,16 +192,14 @@ void * i2c_main() {
     
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
-    process_pin_queue  (bus_interval_ms);                                   // process gpios waiting for changes
-    process_state_queue(bus_interval_ms);                                   // process states waiting for changes
+    process_pin_queue  (schedule -> i2c_interval / 1000000);                // process gpios waiting for changes
+    process_state_queue(schedule -> i2c_interval / 1000000);                // process states waiting for changes
     
     for (iterate(schedule -> i2c_devices, i2c_device *, i2c)) {             // read sensors
       
-      i2c -> count += bus_interval_ms;
-      
-      if (i2c -> count == (i2c -> interval) * (i2c -> hertz_denominator) || i2c -> reading) {
+      if (++i2c -> count == (i2c -> interval) * (i2c -> hertz_denominator) || i2c -> reading) {
         
-        (i2c -> read)(i2c);
+        $(i2c, read);
         
         i2c -> count = 0;
         
@@ -215,36 +207,12 @@ void * i2c_main() {
       }
     }
     
-    if (schedule -> print_sensors && (print_delay -= bus_interval_ms) <= 0) {    // print to console
-      
-      print_delay = console_print_interval;
-      
-      printf(GREY "% 7.3lf%s  ", time_passed(), time_unit);
-      
-      for (iterate(active_sensors, Sensor *, sensor)) {
-        
-        when (sensor -> print);
-        
-        for (int stream = 0; stream < sensor -> data_streams; stream++) {
-          
-          Output * output = &sensor -> outputs[stream];
-          
-          when (output -> print);
-          
-          printf("%s% *.*f%s  ", output -> print_code,
-                 output -> print_places + strlen(output -> unit) + 4,
-                 output -> print_places,
-                 output -> measure, output -> unit);
-        }
-      }
-      
-      printf("\n" RESET);
-    }
+    consider_printing_sensors(schedule -> i2c_interval / 1000000);
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);
     
-    long time_remaining = bus_interval - read_duration;
+    long time_remaining = (schedule -> i2c_interval) - read_duration;
     
     if (time_remaining < 0)
       time_remaining = 0;               // taking too long to read!

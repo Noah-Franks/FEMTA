@@ -18,7 +18,7 @@ Hashmap * hashmap_create(hash_function hash, key_comparator key_diff, freer key_
   return map;
 }
 
-void hashmap_delete(Hashmap * map) {
+void * hashmap_delete(Hashmap * map) {
   // completely deletes a hashmap, deleting all content in the process
   
   for (int i = 0; i < map -> size; i++) {
@@ -30,16 +30,16 @@ void hashmap_delete(Hashmap * map) {
         if (map -> value_free)(map -> value_free)(element -> value);
       }
       
-      list_delete(map -> table[i]);
-      map -> table[i] = NULL;
+      map -> table[i] = list_delete(map -> table[i]);
     }
   }
   
-  list_delete(map -> all );    // these don't need a value_free
-  list_delete(map -> keys);    // -----------------------------
+  map -> all  = list_delete(map -> all );    // these don't need a value_free
+  map -> keys = list_delete(map -> keys);    // -----------------------------
   
   blank(map -> table);
   free(map);
+  return NULL;
 }
 
 void hashmap_add(Hashmap * map, void * key, void * value) {
@@ -112,6 +112,9 @@ void hashmap_update(Hashmap * map, void * key, void * value) {
   element -> value = value;                   // assign new value
 }
 
+void vhashmap_delete(Hashmap * map) {         // void version of hashmap delete
+  hashmap_delete(map);
+}
 
 /* Common functions used when creating hashmaps */
 

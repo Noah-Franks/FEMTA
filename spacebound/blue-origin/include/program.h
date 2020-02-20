@@ -35,7 +35,8 @@ extern  void      hashmap_add       (Hashmap * map, void * key, void * value);  
 extern  void    * hashmap_get       (Hashmap * map, void * key              );     // retrieve element from map
 extern  void      hashmap_update    (Hashmap * map, void * key, void * value);     // update an existing element
 extern  bool      hashmap_exists    (Hashmap * map, void * key              );     // see if element exists in map
-extern  void      hashmap_delete    (Hashmap * map                          );     // completely delete the map
+extern  void    * hashmap_delete    (Hashmap * map                          );     // completely delete the map
+extern  void      vhashmap_delete   (Hashmap * map                          );     // same, but void return type
 extern  Hashmap * hashmap_create    (hash_function hash, key_comparator key_diff,  // make a new map
                                      freer key_free, freer value_free, int size);
 
@@ -60,10 +61,11 @@ extern  void   list_insert      (List * list, void * datum   );  // inserts a no
 extern  void   list_insert_first(List * list, void * datum   );  // inserts a node at the beginning of the list
 extern  void * list_retrieve    (List * list, int index      );  // retrieves the ith element in the list in O(n)
 extern  void   list_remove      (List * list, ListNode * node);  // removes a node, freeing if necessary
-extern  void   list_delete      (List * list                 );  // completely deletes the list and its elements
+extern  void * list_delete      (List * list                 );  // completely deletes the list and its elements
 
 // math.c (math)
 extern  int    gcd(int a, int b) opt(const);    // compute the greatest common factor
+extern  int    lcm(int a, int b) opt(const);    // compute the least common multiple
 
 // memory.c (tests)
 extern  void * debug_malloc          (size_t size                             );  // debug versions
@@ -91,11 +93,14 @@ extern  void   yyerror      (char * format, ...);
 extern  int    yyparse      (void              );
 extern  void   print_config (void              );
 
+// schedule.c (system)
+extern  float time_passed              (void        );
+extern  void  build_schedule           (void        );
+extern  void  consider_printing_sensors(int duration);
+
 // sensor.c (sensors)
 extern  void  init_sensors           (void                                         );
 extern  void  drop_sensors           (void                                         );
-extern  void  start_sensors          (void                                         );
-extern  float time_passed            (void                                         );
 extern  void  bind_stream            (Sensor * sensor, float reading, int stream   );
 extern  void  sensor_process_triggers(Sensor * sensor                              );
 extern  void  sensor_log_header      (Sensor * sensor, char * color                );
