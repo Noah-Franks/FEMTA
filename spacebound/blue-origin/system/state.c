@@ -36,9 +36,11 @@ State * state_get(char * name) {                        // return a state, if it
 void state_set(State * state, bool enter) {             // set a state
   
   float event_time = time_passed();
-  
-  if (enter) printf(CYAN "%7.3f%s    enter %s\n" RESET, event_time, time_unit, state -> name);
-  else       printf(CYAN "%7.3f%s    leave %s\n" RESET, event_time, time_unit, state -> name);
+
+  #ifndef PLOT_MODE
+    if (enter) printf(CYAN "%7.3f%s    enter %s\n" RESET, event_time, time_unit, state -> name);
+    else       printf(CYAN "%7.3f%s    leave %s\n" RESET, event_time, time_unit, state -> name);
+  #endif
   
   if (enter) fprintf(schedule -> control_log, "%f%s\tstate\t%s\tenter\n", event_time, time_unit, state -> name);
   else       fprintf(schedule -> control_log, "%f%s\tstate\t%s\tleave\n", event_time, time_unit, state -> name);

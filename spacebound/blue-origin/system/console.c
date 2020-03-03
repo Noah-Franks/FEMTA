@@ -3,7 +3,7 @@
 
 local Hashmap * color_codes;               // maps names to bash color codes
 
-void init_color() {                        // populate the color code hashmap
+void init_console() {                        // populate the color code hashmap
   
   color_codes = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
   
@@ -25,7 +25,7 @@ void init_color() {                        // populate the color code hashmap
   hashmap_add(color_codes, "brown"  , BROWN  );
 }
 
-void drop_color() {                        // delete the color code hashmap
+void drop_console() {                        // delete the color code hashmap
   hashmap_delete(color_codes);
   color_codes = NULL;
 }

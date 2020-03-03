@@ -120,7 +120,7 @@ typedef void (* user_action)(void * arg, char * raw_text);
 #include "../sensors/test.h"
 #include "../structures/hashmap.h"
 #include "../structures/list.h"
-#include "../system/color.h"
+#include "../system/console.h"
 #include "../system/compiler.h"
 #include "../system/error.h"
 #include "../system/gpio.h"

@@ -1,6 +1,10 @@
 
 #include "../include/program.h"
 
+#ifdef PLOT_MODE                    // prevent preprocessor attack
+#undef consider_printing_sensors    // ---------------------------
+#endif                              // ---------------------------
+
 local void sensor_close(void *);
 local void sensor_do_nothing(Sensor * nil) { return; }
 

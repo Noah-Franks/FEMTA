@@ -72,7 +72,7 @@ Sensor ad15_gnd 25Hz {
   [alias       | A2, water_temperature           |                            ];
   [alias       | A3, novec_temperature           |                            ];*/
   
-  [calibrate   | water_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
+    [calibrate   | water_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
   [calibrate   | novec_pressure   , poly, raw, V | 0.0001874287, -0.0009012627];
   [calibrate   | water_temperature, poly, raw, V | 0.0001874287, -0.0009012627];
   [calibrate   | novec_temperature, poly, raw, V | 0.0001874287, -0.0009012627];

@@ -3,14 +3,10 @@ define enter start;
 
 Sensor ds32 1Hz {
        where Time is clock;
-       where Temperature is temp;
        
        [calibrate   | clock, poly, raw, ms | 0.9821424, 0 ];
-       [calibrate   | temp, poly, raw, C   |       1.0, 0 ];
        [conversions | clock, raw, ms, s    |              ];
-       [conversions | temp, raw, C, F      |              ];
-       [print       | blue, clock          |            2 ];
-       [print       | red, temp            |            2 ];
+       [print       | grey, clock          |            2 ];
 }
 
 /*Sensor ad15_gnd 1Hz {
@@ -19,11 +15,21 @@ Sensor ds32 1Hz {
 
 Sensor ad15_vdd 1Hz {
        [print | cyan, A0, A1, A2, A3 | 0, 0, 0, 0]
+}*/
+
+Sensor ad15_sda 20Hz {
+  
+  where A0 is test;
+  
+  [print | green, A1, A2, A3 | 0, 0, 0, 0];
+  [print | magenta, test | 2];
 }
 
+/*
 Sensor ad15_scl 1Hz {
-       [print | cyan, A0, A1, A2, A3 | 0, 0, 0, 0]
-}*/
+       [print | cyan, A0, A1, A0, A3 | 0, 0, 0, 0]
+
+}
 
 Sensor mcp9 1Hz {
        where Temperature is heat;
@@ -38,3 +44,4 @@ Sensor arm6 1Hz {
        [conversions | cpu, raw, C, F      |         ];
        [print       | red, cpu            |       2 ];
 }
+*/

@@ -122,7 +122,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);    // TODO: error checking
   
-  uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
+  int16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
   
   bind_stream(ad15, counts, config -> mode_cycle);
   

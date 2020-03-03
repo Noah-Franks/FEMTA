@@ -31,7 +31,7 @@ int main(int nargs, char ** args) {
   
   schedule = calloc(1, sizeof(*schedule));
   
-  init_color();       // set up colorized printing to the console
+  init_console();     // set up colorized printing to the console
   init_units();       // set up unit conversions and calibration structures
   init_one();         // set up the 1-wire data structures
   init_i2c();         // set up the i2c data structures
@@ -59,7 +59,7 @@ int main(int nargs, char ** args) {
   drop_one();         // delete 1-wire bus structures
   drop_states();      // delete the state system
   drop_units();       // delete unit structures
-  drop_color();       // delete color structures
+  drop_console();     // delete color structures
   
   gpioTerminate();    // terminate pigpio library
   

@@ -7,9 +7,9 @@ extern  void   micro_sleep   (long us               );    // sleep a number of m
 extern  void   nano_sleep    (long ns               );    // sleep a number of nanoseconds
 extern  long   real_time_diff(struct timespec * past);    // get nanoseconds since a point in the past
 
-// color.c (system)
-extern  void   init_color       (void       );    // set up the color system
-extern  void   drop_color       (void       );    // let go of the color system
+// console.c (system)
+extern  void   init_console     (void       );    // set up the color system
+extern  void   drop_console     (void       );    // let go of the color system
 extern  char * get_color_by_name(char * name);    // takes names to bash color codes
 
 // error.c (system)
@@ -92,6 +92,9 @@ extern  int    yylex_destroy(void          );
 extern  void   yyerror      (char * format, ...);
 extern  int    yyparse      (void              );
 extern  void   print_config (void              );
+
+// plot.c (tests)
+extern  void  consider_plotting_sensors(int duration);
 
 // schedule.c (system)
 extern  float time_passed              (void        );
@@ -181,4 +184,8 @@ extern  void  present_interface(void);    // allow the user to command the proce
 #define gpioRead                          simulation_gpio_read                   // redirect actuations
 #define gpioWrite                         simulation_gpio_write                  // -------------------
 #define gpioSetISRFunc(BCM, EDGE, OUT, F) return_zero();                         // -------------------
+#endif
+
+#ifdef PLOT_MODE
+#define consider_printing_sensors consider_plotting_sensors
 #endif
