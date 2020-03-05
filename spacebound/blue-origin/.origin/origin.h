@@ -12,4 +12,4 @@ extern int  console_print_interval;    // the ms between each console printout
 
 #define DEBUG_MODE                     // define to track resources
 //#define SIMULATION_MODE                // define to simulate sensors
-//#define PLOT_MODE                      // define to redirect console outputs to plot
+#define PLOT_MODE                      // define to redirect console outputs to plot

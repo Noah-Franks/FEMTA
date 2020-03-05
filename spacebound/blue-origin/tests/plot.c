@@ -3,11 +3,33 @@
 
 #include <curses.h>
 
+#ifdef PLOT_MODE
+#undef fgets
+#endif
+
 local bool initialized;
 local float ordinate_min = -2;
 local float ordinate_max = 20;
 local int plot_index;
 local int data;
+
+local int left_offset = 4;
+
+local Mutex input_lock = PTHREAD_MUTEX_INITIALIZER;
+local struct pollfd intercept;
+local char plot_input[32];
+
+void plot_fgets(char * s, int n, FILE * stream) {
+  
+  if (!initialized)
+    return;
+  
+  //fgets(s, n, stream);
+  
+  aquire(&input_lock) {
+    strcpy(s, plot_input);
+  }
+}
 
 void consider_plotting_sensors(int duration) {
   local int plot_delay = 1000;
@@ -18,14 +40,28 @@ void consider_plotting_sensors(int duration) {
   plot_delay = console_print_interval;
   
   if (unlikely(!initialized)) {
+    
+    intercept.fd = 0;
+    intercept.events = POLLIN;
+    
+    pthread_mutex_lock(&input_lock);
+    
     initscr();
+    noecho();
+    
     erase();
-    initialized = true;
-    move(LINES - 2, 0);
-    hline(ACS_HLINE, COLS);
-    move(0, 8);
-    vline(ACS_VLINE, LINES - 2);
+    
+    move(LINES - 2, 0);             // x-axis
+    hline(ACS_HLINE, COLS);         // ------
+    
+    move(0, left_offset);           // y-axis
+    vline(ACS_VLINE, LINES - 2);    // ------
+    
+    mvaddch(LINES - 2, left_offset, ACS_BTEE);    // (0, 0)
+    
     mvaddch(LINES - 1, 0, '$');
+    
+    initialized = true;
   }
   
   mvprintw(        2, 1, "%.1f ", ordinate_max);
@@ -53,10 +89,31 @@ void consider_plotting_sensors(int duration) {
   }
   
   move(LINES - 1, 2);
+  clrtoeol();            // -----------
+  
+  if (poll(&intercept, 1, 0) > 0) {
+    
+    int bytes = read(0, plot_input + strlen(plot_input), 32 - strlen(plot_input));
+    plot_input[bytes] = '\0';
+    
+    if (plot_input[strlen(plot_input) - 1] == '\n') {
+      
+      pthread_mutex_unlock(&input_lock);    // give user.c an opportunity to process the input
+      pthread_mutex_lock  (&input_lock);    // -----------------------------------------------
+      
+      plot_input[0] = '\0';
+      
+      move(LINES - 6, 10);
+      printw("sent");
+    }
+  }
+  
+  printw("%2d %d %s", strlen(plot_input), plot_input[strlen(plot_input) - 1], plot_input);
+  
   refresh();
   plot_index = (plot_index + 1) % COLS;
   
-  if (plot_index < 8) return;
+  if (plot_index < 10) return;
   
   endwin();
   exit_printing(EXIT_SUCCESS, "plot");

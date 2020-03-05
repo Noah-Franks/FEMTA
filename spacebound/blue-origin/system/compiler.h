@@ -7,6 +7,9 @@
  *                                              */
 #define local static
 
+/* Length of an array                           */
+#define len(ARRAY)                              \
+  (sizeof(ARRAY) / sizeof(ARRAY[0]))
 
 /* An alternative control-flow in for-loops:    *
  *                                              *

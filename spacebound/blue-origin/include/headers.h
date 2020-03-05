@@ -7,17 +7,20 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
-#include <pthread.h>
 #include <stdarg.h>
-#include <pigpio.h>
 #include <sched.h>
+#include <stropts.h>
+#include <math.h>
+#include <pigpio.h>
+#include <pthread.h>
 #include <errno.h>
 #include <time.h>
-#include <math.h>
+#include <unistd.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
+#include <sys/poll.h>    // remove?
 #include <sys/prctl.h>
 #include <sys/resource.h>
-
 
 /* primatives */
 
