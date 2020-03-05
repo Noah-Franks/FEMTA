@@ -1,13 +1,19 @@
 
 define enter start;
 
-Sensor test 1Hz {
-  [calibrate   | sine, poly, raw, C   | 8, 8];
-  [conversions | sine, raw, C | ];
+Sensor test 10Hz {
+  [calibrate   | sine,   poly, raw, C   |  1, 0];
+  [calibrate   | cosine, poly, raw, C   |  1, 0];
+  [calibrate   | sine,   poly, C, kPa   |  8, 8];
+  [calibrate   | cosine, poly, C, kPa   |  6, 8];
+               
+  [conversions | sine,   raw, C, kPa         |     ];
+  [conversions | cosine, raw, C, kPa         |     ];
   
-  [calibrate   | cosine, poly, raw, C | 4, 10];
-  [conversions | cosine, raw, C | ];
+  [calibrate   | identity, poly, raw, kPa | 1, 0.02];
+  [conversions | identity, raw, kPa       |        ];
   
-  [print | red, sine    | ];
-  [print | blue, cosine | ];
+  [print       | mint, sine               |     ];
+  [print       | blue, cosine             |     ];
+  [print       | pink, identity           |     ];
 }

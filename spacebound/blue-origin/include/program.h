@@ -189,5 +189,4 @@ extern  void  present_interface(void);    // allow the user to command the proce
 
 #ifdef PLOT_MODE
 #define consider_printing_sensors consider_plotting_sensors
-#define fgets                     plot_fgets
 #endif
