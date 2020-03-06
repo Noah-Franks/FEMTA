@@ -1,23 +1,25 @@
 
 #include "../include/program.h"
 
-local float plot_min = 0;
-local float plot_max = 16;
-
 typedef struct PlotPoint {
   
-  int    value;
-  char * color;
+  int    value;      // integer number of spaces
+  char * color;      // color to print
+  int    places;     // bottom: number of decimal places
+  float  measure;    //         actual measure observed
+  char * unit;       //         measure unit
   
 } PlotPoint;
 
-local PlotPoint points[16];
+local PlotPoint points[8];        // stream measures to print
+local float     plot_min = 0;     // plot range
+local float     plot_max = 45;    //   points outside aren't printed
 
 local int compare_points(const void * a, const void * b) {
   return (((PlotPoint *) a) -> value) - (((PlotPoint *) b) -> value);
 }
 
-void consider_plotting_sensors(int duration) {
+void consider_plotting_sensors(int duration) {    // replaces consider_printing_sensors()
   local int print_delay = 0;
   
   if (!schedule -> print_sensors || (print_delay -= duration) > 0)
@@ -49,10 +51,13 @@ void consider_plotting_sensors(int duration) {
       
       when (output -> print);
       
-      points[num_points].value = plot_space * (output -> measure - plot_min) / (plot_max - plot_min);
-      points[num_points].color = output -> print_code;
+      PlotPoint * point = &points[num_points++];
       
-      num_points++;
+      point -> value   = plot_space * (output -> measure - plot_min) / (plot_max - plot_min);
+      point -> color   = output -> print_code;
+      point -> places  = output -> print_places;
+      point -> measure = output -> measure;
+      point -> unit    = output -> unit;
     }
   }
   
@@ -75,21 +80,12 @@ void consider_plotting_sensors(int duration) {
   
   printf(GREY "\n% 8.3lf  ", time_passed());
   
-  for (iterate(active_sensors, Sensor *, sensor)) {
+  for (int i = 0; i < num_points; i++) {
     
-    when (sensor -> print);
+    PlotPoint * point = &points[i];
     
-    for (int stream = 0; stream < sensor -> data_streams; stream++) {
-      
-      Output * output = &sensor -> outputs[stream];
-      
-      when (output -> print);
-      
-      printf("%s% *.*f%s  ", output -> print_code,
-             output -> print_places + strlen(output -> unit) + 4,
-             output -> print_places,
-             output -> measure, output -> unit);
-    }
+    printf("%s% *.*f%s ", point -> color, point -> places + strlen(point -> unit) + 4,
+           point -> places, point ->  measure, point -> unit);
   }
   
   fflush(stdout);

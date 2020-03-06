@@ -104,7 +104,7 @@ void init_units() {
   hashmap_add(conversions, arrow( lbs,   kg), take( lbs,   kg));
   hashmap_add(conversions, arrow(   A,   mA), take(   A,   mA));
   hashmap_add(conversions, arrow(  mA,    A), take(  mA,    A));
-
+  
   
   hashmap_add(unit_types,    "C", "Temperature");
   hashmap_add(unit_types,    "K", "Temperature");
@@ -131,7 +131,7 @@ void init_units() {
   hashmap_add(unit_types,    "A",     "Current");
   hashmap_add(unit_types,   "mA",     "Current");
   hashmap_add(unit_types,  "mol",    "Quantity");
-
+  
   
   all_units = list_from
     (26, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB", "Ohm", "kOhm", "m", "ft", "kg", "lbs", "cd", "A", "mA", "mol");
@@ -164,46 +164,30 @@ bool unit_is_of_type(Numeric * numeric, char * type) {
 
 void print_units_supported() {
   printf
-    ("Time\n"
-     "   s   : system second\n"
-     "  ms   : system milli-second\n"
-     " min   : system minute\n"
+    ("Time                          Temperature        \n"
+     "   s   : system second           C   : Celcius   \n"
+     "  ms   : system milli-second     K   : Kelvin    \n"
+     " min   : system minute           F   : Fahrenheit\n"
      
-     "Temperature\n"
-     "  C    : Celcius\n"
-     "  K    : Kelvin\n"
-     "  F    : Fahrenheit\n"
+     "Pressure                      Storage            \n"
+     "  atm  : Atmospheres              B  : Bytes     \n"
+     "  kPa  : kilo-Pascals            KB  : Kilobytes \n"
+     "  torr : Torrecelli's unit       MB  : Megabytes \n"
      
-     "Pressure\n"
-     "  atm  : Atmospheres\n"
-     "  kPa  : kilo-Pascals\n"
-     "  torr : Torrecelli's unit\n"
+     "Resistance                   Length              \n"
+     "  Ohm  : Ohms                   m   : Meters     \n"
+     " kOhm  : kilo-Ohms             ft   : feet       \n"
      
-     "Voltage\n"
-     "   V   : Volts\n"
-     "  mV   : milli-Volts\n"
-
-     "Resistance\n"
-     "  Ohm  : Ohms\n"
-     " kOhm  : kilo-Ohms\n"
-
-     "Length\n"
-     "   m   : Meters\n"
-     "  ft   : feet\n"
-    
-     "Mass\n"
-     "  kg  : kilo-Grams\n"
-     " lbs  : Pounds\n"
-
-     "LightIntensity\n"
-     "  cd  : Candelas\n"
-
-     "Current\n"
-     "  A  : Amperes\n"
-     " mA  : mili-Amperes\n"
-
-     "AmountOfSubstance\n"
-     "  mol  : Moles\n"
+     "Mass                         Current             \n"
+     "  kg  : kilo-Grams               A  : Amperes    \n"
+     " lbs  : Pounds                  mA  : milli-Amps \n"
+     
+     "Amount                       LightIntensity      \n"
+     " mol  : Moles                   cd  : Candelas   \n"
+     
+     "Voltage              \n"
+     "   V   : Volts       \n"
+     "  mV   : milli-Volts \n"
      );
 }
 
