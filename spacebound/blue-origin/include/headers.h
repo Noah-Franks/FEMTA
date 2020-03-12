@@ -119,6 +119,7 @@ typedef void (* user_action)(void * arg, char * raw_text);
 #include "../sensors/ds18.h"
 #include "../sensors/ds32.h"
 #include "../sensors/mcp9.h"
+#include "../sensors/veml.h"
 #include "../sensors/sensor.h"
 #include "../sensors/test.h"
 #include "../structures/hashmap.h"

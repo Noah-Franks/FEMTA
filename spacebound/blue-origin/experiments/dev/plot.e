@@ -14,6 +14,6 @@ Sensor test 1Hz {
   [conversions | identity, raw, kPa       |         ];
   
   [print       | mint, sine               |         ];
-  [print       | orange, cosine           |         ];
+  [print       | blue, cosine           |         ];
   [print       | pink, identity           |         ];
 }

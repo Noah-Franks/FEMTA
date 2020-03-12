@@ -103,6 +103,15 @@ void build_schedule() {
     list_insert(schedule -> i2c_devices, test -> i2c);
   }
   
+  // veml
+  proto = hashmap_get(all_sensors, "veml");
+  
+  if (proto -> requested) {
+    Sensor * veml = init_veml(proto);
+    list_insert(active_sensors         , veml       );
+    list_insert(schedule -> i2c_devices, veml -> i2c);
+  }
+  
   // ad15
   Sensor * ad15[4] = {
     NULL, NULL, NULL, NULL,

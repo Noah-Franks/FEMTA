@@ -6,10 +6,10 @@
  *   RTC TCXO DS3231N
  *   Connected via I2C
  * 
- * Datasheet: 
+ * Datasheet:
  *   https://datasheets.maximintegrated.com/en/ds/DS3231.pdf
  * 
- * Author: 
+ * Author:
  *   Noah Franks
  */
 
