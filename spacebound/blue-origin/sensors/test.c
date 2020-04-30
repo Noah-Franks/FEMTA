@@ -6,11 +6,7 @@ local bool read_test(i2c_device * test_i2c);
 Sensor * init_test(Sensor * test) {
   
   test -> name = "TEST_SENSOR";
-  test -> i2c = create_i2c_device(test, read_test);
-  test -> i2c -> log = safe_open("logs/test.log", "a");
-  
-  printf("logged in logs/test.log\n");
-  printf("A virtual test sensor\n\n");
+  test -> i2c = create_i2c_device(test, read_test, "A virtual test sensor");
   
   sensor_log_header(test, GRAY);
   return test;

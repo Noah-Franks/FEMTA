@@ -6,11 +6,7 @@ local bool read_arm6(i2c_device * arm6_i2c);
 Sensor * init_arm6(Sensor * arm6) {
   
   arm6 -> name = "ARM6_SENSOR";
-  arm6 -> i2c = create_i2c_device(arm6, read_arm6);
-  arm6 -> i2c -> log = safe_open("logs/arm6.log", "a");
-  
-  printf("logged in logs/arm6.log\n");
-  printf("A Central Processing Unit\n\n");
+  arm6 -> i2c = create_i2c_device(arm6, read_arm6, "A Central Processing Unit");
   
   sensor_log_header(arm6, GRAY);
   return arm6;

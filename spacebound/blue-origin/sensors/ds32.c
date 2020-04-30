@@ -11,14 +11,10 @@ char * ds32_time_unit;                                         // the time unit 
 Sensor * init_ds32(Sensor * ds32) {
   
   ds32 -> name = "DS3231N";
-  ds32 -> i2c = create_i2c_device(ds32, read_ds32);
-  ds32 -> i2c -> log = safe_open("logs/ds32.log", "a");
-  
-  printf("logged in logs/ds32.log\n");
-  printf("A real time clock\n\n");
+  ds32 -> i2c = create_i2c_device(ds32, read_ds32, "A real time clock");
   
   setlinebuf(ds32 -> i2c -> log);    // write out every read
-  //set_time_ds32(ds32);             // uncomment to set the time
+//set_time_ds32(ds32);               // uncomment to set the time
   
   Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME       ];    // sensors normally don't need this,
   Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];    // but this one sets the human time.

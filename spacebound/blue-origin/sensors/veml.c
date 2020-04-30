@@ -6,11 +6,7 @@ local bool read_veml(i2c_device * veml_i2c);    // how to read from this sensor
 Sensor * init_veml(Sensor * veml) {
   
   veml -> name = "VEML6075";
-  veml -> i2c = create_i2c_device(veml, read_veml);
-  veml -> i2c -> log = safe_open("logs/veml.log", "a");
-  
-  printf("logged in logs/veml.log\n");
-  printf("A photodiode\n\n");
+  veml -> i2c = create_i2c_device(veml, read_veml, "A photodiode");
   
   sensor_log_header(veml, MAGENTA);
   return veml;

@@ -13,7 +13,7 @@ typedef struct PlotPoint {
 
 local PlotPoint points[8];        // stream measures to print
 local float     plot_min = 0;     // plot range
-local float     plot_max = 45;    //   points outside aren't printed
+local float     plot_max = 45;   //   points outside aren't printed
 
 local int compare_points(const void * a, const void * b) {
   return (((PlotPoint *) a) -> value) - (((PlotPoint *) b) -> value);

@@ -17,7 +17,7 @@ local int8 handles[0x7F];        // pigpio handle to i2c address table
 
 local void * i2c_main();
 
-i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {       // create and register an i2c dev
+i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader, char * message) {    // create and register
   
   i2c_device * i2c = calloc(1, sizeof(*i2c));
   
@@ -36,6 +36,7 @@ i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {       // cr
     handles[i2c -> address] = i2cOpen(1, i2c -> address, 0);               // -------------------------
   
   i2c -> handle = handles[i2c -> address];
+  i2c -> log = safe_open(sensor -> log_path, "a");
   
   // print a nice message for the user
   printf("Started " GREEN "%s " RESET "at " YELLOW "%d", sensor -> name, sensor -> hertz_numerator);
@@ -43,6 +44,7 @@ i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {       // cr
   printf("Hz " RESET "on " BLUE "0x%x " RESET, i2c -> address);
   if (sensor -> print) printf("with " MAGENTA "printing\n" RESET);
   else                 printf("\n");
+  printf("logged in %s\n%s\n\n", sensor -> log_path, message);
   
   #ifdef SIMULATION_MODE
   i2c -> read = simulation_read_i2c;                                       // connect to simulation instead

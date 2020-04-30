@@ -3,6 +3,7 @@
 
 local State * states;                                   // all the states
 local int     n_states;                                 // the number of states
+local State * mission_complete;                         // special state marking end of program
 
 void drop_states() {                                    // remove all states
   
@@ -21,6 +22,9 @@ State * state_create(char * name, bool enter) {         // create and track a ne
   states[n_states].name    = name;
   states[n_states].entered = enter;
   
+  if (!strcmp(name, "mission_complete"))
+    mission_complete = &states[n_states];
+  
   return &states[n_states++];
 }
 
@@ -36,11 +40,9 @@ State * state_get(char * name) {                        // return a state, if it
 void state_set(State * state, bool enter) {             // set a state
   
   float event_time = time_passed();
-
-  #ifndef PLOT_MODE
-    if (enter) printf(CYAN "%7.3f%s    enter %s\n" RESET, event_time, time_unit, state -> name);
-    else       printf(CYAN "%7.3f%s    leave %s\n" RESET, event_time, time_unit, state -> name);
-  #endif
+  
+  if (enter) printf(CYAN "%7.3f%s    enter %s\n" RESET, event_time, time_unit, state -> name);
+  else       printf(CYAN "%7.3f%s    leave %s\n" RESET, event_time, time_unit, state -> name);
   
   if (enter) fprintf(schedule -> control_log, "%f%s\tstate\t%s\tenter\n", event_time, time_unit, state -> name);
   else       fprintf(schedule -> control_log, "%f%s\tstate\t%s\tleave\n", event_time, time_unit, state -> name);
@@ -74,6 +76,17 @@ void process_state_queue(int duration) {                // process any delayed s
     state_set(state, state -> queued_enter);
     state -> queued_delay = 0;
   }
+}
+
+void wait_on_mission() {
+  
+  if (!mission_complete)
+    exit_printing(ERROR_EXPERIMENTER, 
+                  "Without manual control or a 'mission_complete' state, there's no way for the process to exit!");
+  
+  while (!mission_complete -> entered)    // check for mission termination every 5s
+    micro_sleep(5000000);                 // --------------------------------------
+  micro_sleep(1000000);
 }
 
 void print_all_states() {                               // nicely print all the states

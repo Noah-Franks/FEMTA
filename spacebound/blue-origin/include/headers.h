@@ -121,6 +121,7 @@ typedef void (* user_action)(void * arg, char * raw_text);
 #include "../sensors/mcp9.h"
 #include "../sensors/veml.h"
 #include "../sensors/sensor.h"
+#include "../sensors/slf3.h"
 #include "../sensors/test.h"
 #include "../structures/hashmap.h"
 #include "../structures/list.h"

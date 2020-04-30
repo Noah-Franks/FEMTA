@@ -6,11 +6,7 @@ local bool read_mcp9(i2c_device * mcp9_i2c);
 Sensor * init_mcp9(Sensor * mcp9) {
   
   mcp9 -> name = "MCP9808";
-  mcp9 -> i2c = create_i2c_device(mcp9, read_mcp9);
-  mcp9 -> i2c -> log = safe_open("logs/mcp9.log", "a");
-  
-  printf("logged in logs/mcp9.log\n");
-  printf("An ambient thermometer\n\n");
+  mcp9 -> i2c = create_i2c_device(mcp9, read_mcp9, "An ambient thermometer");
   
   sensor_log_header(mcp9, RED);
   return mcp9;

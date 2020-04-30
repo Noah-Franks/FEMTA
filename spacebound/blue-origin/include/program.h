@@ -41,17 +41,17 @@ extern  Hashmap * hashmap_create    (hash_function hash, key_comparator key_diff
                                      freer key_free, freer value_free, int size);
 
 // i2c.c (system)
-extern  void         init_i2c         (void                                            );
-extern  void         drop_i2c         (void                                            );
-extern  void         start_i2c        (void                                            );
-extern  bool         i2c_write_byte   (i2c_device * dev, uint8 reg, uint8 value        );
-extern  bool         i2c_write_bytes  (i2c_device * dev, uint8 reg, uint8 * buf, char n);
-extern  bool         i2c_read_bytes   (i2c_device * dev, uint8 reg, uint8 * buf, char n);
-extern  bool         i2c_raw_write    (i2c_device * dev,            uint8 * buf, char n);
-extern  bool         i2c_raw_read     (i2c_device * dev,            uint8 * buf, char n);
-extern  uint8        i2c_read_byte    (i2c_device * dev, uint8 reg                     );
-extern  void         i2c_close        (i2c_device * i2c                                );
-extern  i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader              );
+extern  void         init_i2c         (void                                              );
+extern  void         drop_i2c         (void                                              );
+extern  void         start_i2c        (void                                              );
+extern  bool         i2c_write_byte   (i2c_device * dev, uint8 reg, uint8 value          );
+extern  bool         i2c_write_bytes  (i2c_device * dev, uint8 reg, uint8 * buf, char n  );
+extern  bool         i2c_read_bytes   (i2c_device * dev, uint8 reg, uint8 * buf, char n  );
+extern  bool         i2c_raw_write    (i2c_device * dev,            uint8 * buf, char n  );
+extern  bool         i2c_raw_read     (i2c_device * dev,            uint8 * buf, char n  );
+extern  uint8        i2c_read_byte    (i2c_device * dev, uint8 reg                       );
+extern  void         i2c_close        (i2c_device * i2c                                  );
+extern  i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader, char * message);
 
 // list.c (structure)
 extern  List * list_create      (void                        );  // creates an empty list
@@ -119,6 +119,7 @@ extern  Sensor * init_arm6(Sensor * proto              );
 extern  Sensor * init_ds18(Sensor * proto, char * path );
 extern  Sensor * init_ds32(Sensor * proto              );
 extern  Sensor * init_mcp9(Sensor * proto              );
+extern  Sensor * init_slf3(Sensor * proto              );
 extern  Sensor * init_test(Sensor * proto              );
 extern  Sensor * init_veml(Sensor * proto              );
 
@@ -138,6 +139,7 @@ extern  State * state_get          (char * name                     );    // get
 extern  void    state_set          (State * state,        bool enter);    // set a state
 extern  void    state_queue        (StateChange * change, bool enter);    // queue a state change
 extern  void    process_state_queue(int duration                    );    // process delayed changes
+extern  void    wait_on_mission    (void                            );    // wait for mission complete
 extern  void    print_all_states   (void                            );    // nicely print every state
   
 // units.c (math)

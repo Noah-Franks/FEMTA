@@ -63,6 +63,7 @@ typedef struct Sensor {
   
   char * name;              // component name
   char * code_name;         // abbreviated name
+  char * log_path;          // where to save data streams
   bool   print;             // whether sensor prints
   
   union {

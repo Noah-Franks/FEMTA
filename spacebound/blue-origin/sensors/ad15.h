@@ -3,7 +3,7 @@
 /**
  * Sensor:
  *   Analog to digital converter
- *   ADS1115
+ *   Texas Instruments ADS1115
  *   Connected via I2C
  * 
  * Datasheet: 

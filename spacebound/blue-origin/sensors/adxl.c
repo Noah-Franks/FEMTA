@@ -6,11 +6,7 @@ local bool read_adxl(i2c_device * adxl_i2c);
 Sensor * init_adxl(Sensor * adxl) {
   
   adxl -> name = "ADXL345";
-  adxl -> i2c = create_i2c_device(adxl, read_adxl);
-  adxl -> i2c -> log = safe_open("logs/adxl.log", "a");
-  
-  printf("logged in logs/adxl.log\n");
-  printf("An accelerometer\n\n");
+  adxl -> i2c = create_i2c_device(adxl, read_adxl, "An accelerometer");
   
   sensor_log_header(adxl, RED);
   

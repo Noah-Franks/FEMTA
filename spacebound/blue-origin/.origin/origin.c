@@ -6,7 +6,7 @@ extern FILE * yyin;
 bool console_error_messages = true;
 bool use_real_time_clock    = true;
 bool print_to_console       = true;
-bool allow_user_input       = true;
+bool allow_user_input       = false;
 int  console_print_interval = 1000;    // ms between prints
 
 int main(int nargs, char ** args) {
@@ -45,8 +45,8 @@ int main(int nargs, char ** args) {
   if (schedule -> i2c_active) start_i2c();       // start reading the i2c bus
   if (schedule -> one_active) start_one();       // start reading the 1-wire bus
   
-  if (allow_user_input)
-    present_interface();
+  if (allow_user_input) present_interface();     // give user manual control
+  else                  wait_on_mission();       // wait for mission to complete
   
   schedule -> term_signal = true;                // tell all child threads to terminate
   

@@ -10,10 +10,8 @@ void pin_set(char gpio, bool hot) {                     // set a pin high or low
   
   gpioWrite(gpio, (int) hot);
   
-  #ifndef PLOT_MODE
-    if (hot) printf(YELLOW "%7.3f%s    set pin % 2d pos\n" RESET, time_passed(), time_unit, gpio);
-    else     printf(YELLOW "%7.3f%s    set pin % 2d neg\n" RESET, time_passed(), time_unit, gpio);
-  #endif
+  if (hot) printf(YELLOW "%7.3f%s    set pin % 2d pos\n" RESET, time_passed(), time_unit, gpio);
+  else     printf(YELLOW "%7.3f%s    set pin % 2d neg\n" RESET, time_passed(), time_unit, gpio);
   
   if (hot) fprintf(schedule -> control_log, "%f%s\twire\t%d\thot\n" , time_passed(), time_unit, gpio);
   else     fprintf(schedule -> control_log, "%f%s\twire\t%d\tcold\n", time_passed(), time_unit, gpio);

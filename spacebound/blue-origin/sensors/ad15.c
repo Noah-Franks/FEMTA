@@ -58,15 +58,7 @@ Sensor * init_ad15(Sensor * ad15, List * modes) {
   
   ad15 -> name = "ADS1115";
   ad15 -> teardown = free_ad15;
-  ad15 -> i2c = create_i2c_device(ad15, read_ad15);
-  
-  char file_name[32];
-  
-  sprintf(file_name, "logs/ad15-%x.log", ad15 -> address);
-  printf("logged in %s\n", file_name);
-  printf("An analog to digital converter\n\n");
-  
-  ad15 -> i2c -> log = safe_open(file_name, "a");
+  ad15 -> i2c = create_i2c_device(ad15, read_ad15, "An analog to digital converter");
   
   sensor_log_header(ad15, ORANGE);
   

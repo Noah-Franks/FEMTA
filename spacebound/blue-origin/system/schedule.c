@@ -112,18 +112,34 @@ void build_schedule() {
     list_insert(schedule -> i2c_devices, veml -> i2c);
   }
   
-  // ad15
-  Sensor * ad15[4] = {
-    NULL, NULL, NULL, NULL,
+  // slf3
+  char * slf3_names[2] = {
+    "slf3_left", "slf3_right"
   };
   
-  char * code_names[4] = {
-    "ad15_gnd", "ad15_vdd", "ad15_sda", "ad15_scl"
+  for (int sensor_index = 0; sensor_index < 2; sensor_index++) {
+    
+    proto = hashmap_get(all_sensors, slf3_names[sensor_index]);
+    
+    if (proto -> requested) {
+      Sensor * slf3 = init_slf3(proto);
+      list_insert(active_sensors,          slf3       );
+      list_insert(schedule -> i2c_devices, slf3 -> i2c);
+    }
+  }
+  
+  // ad15
+  Sensor * ad15[4] = {
+    NULL, NULL, NULL, NULL
+  };
+  
+  char * ad15_names[4] = {
+    "ad15_gnd", "ad15_vdd", "ad15_sda", "ad15_scl" 
   };
   
   for (int sensor_index = 0; sensor_index < 4; sensor_index++) {
     
-    proto = hashmap_get(all_sensors, code_names[sensor_index]);
+    proto = hashmap_get(all_sensors, ad15_names[sensor_index]);
     
     if (proto -> requested) {
       ad15[sensor_index] = init_ad15(proto, list_from(4, A0, A1, A2, A3));
