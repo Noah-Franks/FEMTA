@@ -10,38 +10,42 @@ Created on Fri Sept 22 22:34:15 2020
     data throughout the system. Values are most notably pressure and
     temperature, however, other non-measureable values are calculated such
     as masses and partial pressures.
+    -> variables labeled 'chmbr' are values for NOVEC chamber.
+       variables labeled 'tank' are values for H2O chamber (propellant).
+    -> 'mDotThruOrifice' is an external dependency. Have this in the same
+    working directory.
     -> MUST VERIFY PERFECT DIAPHRAGM ASSUMPTION!
 @author: Justin C (pressure build-up in propellant tank)
 @co-author: Alan J (pipe flows (not yet implemented here))
 %}
 
 clear
-LVTF_ambientP = load('LVTF_ambientP.mat').ans;
+LVTF_ambientP = load('LVTF_ambientP.mat').ans; % ambient pressure data
 livePlot = 0; %bool plot data live (LAGGY!!)
 stoData = 1; %bool store data in arrays at every time step
 
-%initial conditions
-ctrlChmbrVent = 0;
+%initial conditions (all in SI units: kg, m, N, Pa, s, etc) (all physical parameters)
+ctrlChmbrVent = 0; % 0-open 1-closed
 ctrlTankVent = 0;
-ambientP = 45000;
-chmbrTG = 297;
-chmbrTL = 298.3;
-chmbrPNvc = nvcVP(chmbrTL);
-chmbrPAir = 45000-chmbrPNvc;
-chmbrML = 0.1*(1e-6)*nvcRho(chmbrTL);
-chmbrVL = chmbrML/nvcRho(chmbrTL);
-chmbrVG = (5e-7)-chmbrVL;
-chmbrSAL = 0.0000149034;
-chmbrMGAir = chmbrPAir*chmbrVG/287.05/chmbrTG;
-chmbrMGNvc = chmbrPNvc*chmbrVG/33.25/chmbrTG;
-chmbrVentDia = 0.007;
+ambientP = 45000; % ambient pressure (initial)
+chmbrTG = 297; % bulk temperature of gases (ie. vapors)
+chmbrTL = 298.3; % bulk temperature of liquid
+chmbrPNvc = nvcVP(chmbrTL); % NOVEC partial pressure
+chmbrPAir = 45000-chmbrPNvc; % Air partial pressure
+chmbrML = 0.1*(1e-6)*nvcRho(chmbrTL); % mass of liquid
+chmbrVL = chmbrML/nvcRho(chmbrTL); % volume of liquid
+chmbrVG = (5e-7)-chmbrVL; % volume of gases
+chmbrSAL = 0.0000149034; % surface area of liquid
+chmbrMGAir = chmbrPAir*chmbrVG/287.05/chmbrTG; % mass of air gas
+chmbrMGNvc = chmbrPNvc*chmbrVG/33.25/chmbrTG; % mass of NOVEC gas 
+chmbrVentDia = 0.007; % tank vent hole diameter
 tankTG = 297;
 tankTL = 297;
 tankPH2o = h2oVP(tankTL);
 tankPAir = ambientP-tankPH2o;
 tankVL = 14*(1e-6);
 tankVG = 0;
-tankLRho = 997; %initial density
+tankLRho = 997; %initial liquid density
 tankML = tankLRho*tankVL;
 tankSAL = 0;
 tankMGAir = tankPAir*tankVG/287.05/tankTG;
@@ -49,7 +53,7 @@ tankMGH2o = tankPH2o*tankVG/461.52/tankTG;
 tankVentDia = 0.007;
 
 
-if livePlot
+if livePlot % this can get very laggy
     clf;
     hold on;
     yyaxis left;
@@ -59,7 +63,7 @@ if livePlot
     ylim([282 300]);
     grid on;
 end
-if stoData
+if stoData % output structure
     simData.time = zeros([0,0]);
     simData.physics.mass = zeros([0,0]);
     simData.physics.pressure = zeros([0,0]);
@@ -67,9 +71,10 @@ if stoData
     simData.physics.volume = zeros([0,0]);
 end
 
-dt = 0.03;
-ff = 0.001;
+dt = 0.03; %time step (<= 0.03)
+ff = 0.001; %fudge factor
 for simTime = 0:dt:150
+    %% Control code
     if(simTime >= 23.7)
         ctrlChmbrVent = 1;
         %
@@ -83,14 +88,14 @@ for simTime = 0:dt:150
         %
     end
     ambientP = 1000*LVTF_ambientP(find(LVTF_ambientP(:,1) > simTime, 1, 'first'), 2);
-    %%
+    %% NOVEC evaporation transient
     nvcEC = 0.006; %0.01625
     nvcCC = 0.00606; %0.016314
     if(ctrlChmbrVent == 0)
         nvcEC = 0.0115;
         nvcCC = 0.009;
     end
-    %%
+    %
     mDot = nvcEvap(nvcEC, nvcCC, chmbrSAL, chmbrPNvc, chmbrTG, chmbrTL);
     chmbrML = chmbrML - mDot*dt;
     %fprintf("%0.10f kg\t", chmbrML);
@@ -102,7 +107,7 @@ for simTime = 0:dt:150
     chmbrVL = chmbrVL + (chmbrML/nvcRho(chmbrTL)-chmbrVL);
     chmbrMGNvc = chmbrMGNvc + mDot*dt;
     chmbrPNvc = chmbrMGNvc*33.25*chmbrTG/chmbrVG;
-    %%
+    %% H2O evaporation transient
     %{
     mDot = nvcEvap(1.0, 1.0, tankSAL, chmbrPNvc, chmbrTG, chmbrTL);
     tankML = tankML - mDot*dt;
@@ -113,7 +118,7 @@ for simTime = 0:dt:150
     tankMGH2o = tankMGH2o + mDot*dt;
     tankPH2o = tankMGH2o*461.52*tankTG/tankVG;
     %}
-    %%
+    %% NOVEC thermal transient
     if(chmbrML > 0)
         if(ctrlChmbrVent == 0)
             dT = (112/1000) * -mDot * chmbrSAL * (1/(1.183*chmbrML));
@@ -133,7 +138,7 @@ for simTime = 0:dt:150
         chmbrTL = chmbrTG;
     end
     %fprintf("%0.10f K\n", chmbrTG)
-    %%
+    %% NOVEC vent transient
     if(ctrlChmbrVent == 0)
         mDot = ff*mDotThruOrifice(ambientP, chmbrPAir+chmbrPNvc, (chmbrMGAir+chmbrMGNvc)/chmbrVG, (1.4*chmbrMGAir+1.0289*chmbrMGNvc)/(chmbrMGAir+chmbrMGNvc), 0.8, chmbrVentDia);
         chmbrMGAir = chmbrMGAir + mDot*(chmbrMGAir/(chmbrMGAir+chmbrMGNvc))*dt;
@@ -147,6 +152,7 @@ for simTime = 0:dt:150
         chmbrPAir = chmbrMGAir*287.05*chmbrTG/chmbrVG;
         chmbrPNvc = chmbrMGNvc*33.25*chmbrTG/chmbrVG;
     end
+    %% H2O vent transient
     %{
     if(ctrlTankVent == 0)
         if(tankSAL == 0)
@@ -165,7 +171,7 @@ for simTime = 0:dt:150
         tankPH2o = tankMGH2o*461.52*tankTG/tankV;
     end
     %}
-    %%
+    %% Simulation output
     if livePlot
         yyaxis left
         plot(simTime, (chmbrPAir+chmbrPNvc)/1000, '.b', 'MarkerSize', 2);
