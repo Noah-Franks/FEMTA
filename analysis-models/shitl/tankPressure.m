@@ -10,50 +10,47 @@ Created on Fri Sept 22 22:34:15 2020
     data throughout the system. Values are most notably pressure and
     temperature, however, other non-measureable values are calculated such
     as masses and partial pressures.
-    -> variables labeled 'chmbr' are values for NOVEC chamber.
-       variables labeled 'tank' are values for H2O chamber (propellant).
-    -> 'mDotThruOrifice' is an external dependency. Have this in the same
-    working directory.
+    -> NOVEC Freezing point alert uses the 1 atm freezing point temp.
     -> MUST VERIFY PERFECT DIAPHRAGM ASSUMPTION!
+    -> Modeling surface area transient for liquids?
 @author: Justin C (pressure build-up in propellant tank)
 @co-author: Alan J (pipe flows (not yet implemented here))
 %}
 
 clear
-LVTF_ambientP = load('LVTF_ambientP.mat').ans; % ambient pressure data
+LVTF_ambientP = load('LVTF_ambientP.mat').ans + 0.25;
 livePlot = 0; %bool plot data live (LAGGY!!)
 stoData = 1; %bool store data in arrays at every time step
 
-%initial conditions (all in SI units: kg, m, N, Pa, s, etc) (all physical parameters)
-ctrlChmbrVent = 0; % 0-open 1-closed
+%initial conditions
+ctrlChmbrVent = 0;
 ctrlTankVent = 0;
-ambientP = 45000; % ambient pressure (initial)
-chmbrTG = 297; % bulk temperature of gases (ie. vapors)
-chmbrTL = 298.3; % bulk temperature of liquid
-chmbrPNvc = nvcVP(chmbrTL); % NOVEC partial pressure
-chmbrPAir = 45000-chmbrPNvc; % Air partial pressure
-chmbrML = 0.1*(1e-6)*nvcRho(chmbrTL); % mass of liquid
-chmbrVL = chmbrML/nvcRho(chmbrTL); % volume of liquid
-chmbrVG = (5e-7)-chmbrVL; % volume of gases
-chmbrSAL = 0.0000149034; % surface area of liquid
-chmbrMGAir = chmbrPAir*chmbrVG/287.05/chmbrTG; % mass of air gas
-chmbrMGNvc = chmbrPNvc*chmbrVG/33.25/chmbrTG; % mass of NOVEC gas 
-chmbrVentDia = 0.007; % tank vent hole diameter
-tankTG = 297;
-tankTL = 297;
+ambientP = 45000;
+chmbrTG = 295.6;
+chmbrTL = 295.6;
+chmbrPNvc = nvcVP(chmbrTL);
+chmbrPAir = 45000-chmbrPNvc;
+chmbrML = 0.1*(1e-6)*nvcRho(chmbrTL);
+chmbrVL = chmbrML/nvcRho(chmbrTL);
+chmbrVG = (5e-7)-chmbrVL;
+chmbrSAL = 0.0000149034;
+chmbrMGAir = chmbrPAir*chmbrVG/287.05/chmbrTG;
+chmbrMGNvc = chmbrPNvc*chmbrVG/33.25/chmbrTG;
+chmbrVentDia = 0.001;
+tankTG = 295;
+tankTL = 295;
 tankPH2o = h2oVP(tankTL);
 tankPAir = ambientP-tankPH2o;
-tankVL = 14*(1e-6);
-tankVG = 0;
-tankLRho = 997; %initial liquid density
+tankVL = 13.5*(1e-6);
+tankVG = 0.5*(1e-6);
+tankLRho = 997; %initial density
 tankML = tankLRho*tankVL;
 tankSAL = 0;
 tankMGAir = tankPAir*tankVG/287.05/tankTG;
 tankMGH2o = tankPH2o*tankVG/461.52/tankTG;
-tankVentDia = 0.007;
+tankVentDia = 0.001;
 
-
-if livePlot % this can get very laggy
+if livePlot
     clf;
     hold on;
     yyaxis left;
@@ -63,21 +60,31 @@ if livePlot % this can get very laggy
     ylim([282 300]);
     grid on;
 end
-if stoData % output structure
+if stoData
     simData.time = zeros([0,0]);
-    simData.physics.mass = zeros([0,0]);
-    simData.physics.pressure = zeros([0,0]);
-    simData.physics.temperature = zeros([0,0]);
-    simData.physics.volume = zeros([0,0]);
+    simData.physics.mass.values = zeros([0,0]);
+    simData.physics.mass.labels = [];
+    simData.physics.pressure.values = zeros([0,0]);
+    simData.physics.pressure.labels = [];
+    simData.physics.temperature.values = zeros([0,0]);
+    simData.physics.temperature.labels = [];
+    simData.physics.volume.values = zeros([0,0]);
+    simData.physics.volume.labels = [];
+    simData.events.values = zeros([0,2]);
+    simData.events.labels = ["Time", "Event"];
 end
 
-dt = 0.03; %time step (<= 0.03)
-ff = 0.001; %fudge factor
+dt = 0.03;
+ffNvcVent = 0.049;
+ffH2oVent = 0.005;
+simData.events.values = [simData.events.values; [0, "Simulation start"]];
 for simTime = 0:dt:150
-    %% Control code
-    if(simTime >= 23.7)
+    %% Control transient
+    if(simTime >= 23.7 && simTime < 23.7+dt)
+        
         ctrlChmbrVent = 1;
-        %
+        simData.events.values = [simData.events.values; [simTime, sprintf("ctrlChmbrVent State to %d",ctrlChmbrVent)]];
+        %{
         ctrlTankVent = 1;
         if(simTime >= 60)
             ctrlChmbrVent = 0;
@@ -85,12 +92,16 @@ for simTime = 0:dt:150
                 ctrlChmbrVent = 1;
             end
         end
-        %
+        %}
+    end
+    if(simTime >= 90 && simTime < 90+dt)
+        ctrlTankVent = 1;
+        simData.events.values = [simData.events.values; [simTime, sprintf("ctrlTankVent State to %d",ctrlTankVent)]];
     end
     ambientP = 1000*LVTF_ambientP(find(LVTF_ambientP(:,1) > simTime, 1, 'first'), 2);
     %% NOVEC evaporation transient
-    nvcEC = 0.006; %0.01625
-    nvcCC = 0.00606; %0.016314
+    nvcEC = 0.001625; %0.01625
+    nvcCC = 0.0016314; %0.016314
     if(ctrlChmbrVent == 0)
         nvcEC = 0.0115;
         nvcCC = 0.009;
@@ -107,30 +118,17 @@ for simTime = 0:dt:150
     chmbrVL = chmbrVL + (chmbrML/nvcRho(chmbrTL)-chmbrVL);
     chmbrMGNvc = chmbrMGNvc + mDot*dt;
     chmbrPNvc = chmbrMGNvc*33.25*chmbrTG/chmbrVG;
-    %% H2O evaporation transient
-    %{
-    mDot = nvcEvap(1.0, 1.0, tankSAL, chmbrPNvc, chmbrTG, chmbrTL);
-    tankML = tankML - mDot*dt;
-    if(tankML < 0)
-        mDot = mDot - abs(tankML)/dt;
-        tankML = 0;
-    end
-    tankMGH2o = tankMGH2o + mDot*dt;
-    tankPH2o = tankMGH2o*461.52*tankTG/tankVG;
-    %}
     %% NOVEC thermal transient
     if(chmbrML > 0)
         if(ctrlChmbrVent == 0)
-            dT = (112/1000) * -mDot * chmbrSAL * (1/(1.183*chmbrML));
-            chmbrTG = chmbrTG + 2700000*dT*dt;
-            dT = 1.1e8*dT;
-            dT = dT - (chmbrML/0.0015)*50*(1*chmbrSAL*(chmbrTL-chmbrTG)*(1/(1.183*chmbrML)));
+            dT = 0.34 * (112) * -mDot * (1/(1.183*chmbrML));
+            dT = dT + (0.04*chmbrSAL*(chmbrTL-chmbrTG)*(1/(1.183*chmbrML)));
             chmbrTL = chmbrTL + dT*dt;
         else
-            dT = (2.47e10*chmbrML/0.0015)*(112/1000) * mDot * chmbrSAL * (1/(1.183*chmbrML));
-            dT = dT - 0.024*(chmbrSAL*((chmbrTL+1)-chmbrTG)*(1/(1.183*chmbrML)));
+            dT = (2.45e10*chmbrML/0.0015)*(112/1000) * mDot * chmbrSAL * (1/(1.183*chmbrML));
+            dT = dT - 0.03*(1*chmbrSAL*((chmbrTL)-chmbrTG)*(1/(1.183*chmbrML)));
             chmbrTL = chmbrTL + dT*dt;
-            dT = -0.03*(1*chmbrSAL*(chmbrTG-(chmbrTL+1))*(1/(1.183*chmbrML)));
+            dT = -0.065*(1*chmbrSAL*(chmbrTG-(chmbrTL))*(1/(1.183*chmbrML)));
             chmbrTG = chmbrTG + dT*dt;
         end
     else
@@ -138,9 +136,12 @@ for simTime = 0:dt:150
         chmbrTL = chmbrTG;
     end
     %fprintf("%0.10f K\n", chmbrTG)
+    if(chmbrTL < (-135+273.15))
+        simData.events.values = [simData.events.values; [simTime, "NOVEC liquid freezing!"]];
+    end
     %% NOVEC vent transient
     if(ctrlChmbrVent == 0)
-        mDot = ff*mDotThruOrifice(ambientP, chmbrPAir+chmbrPNvc, (chmbrMGAir+chmbrMGNvc)/chmbrVG, (1.4*chmbrMGAir+1.0289*chmbrMGNvc)/(chmbrMGAir+chmbrMGNvc), 0.8, chmbrVentDia);
+        mDot = ffNvcVent*mDotThruOrifice(ambientP, chmbrPAir+chmbrPNvc, (chmbrMGAir+chmbrMGNvc)/chmbrVG, (1.4*chmbrMGAir+1.0289*chmbrMGNvc)/(chmbrMGAir+chmbrMGNvc), 0.8, chmbrVentDia);
         chmbrMGAir = chmbrMGAir + mDot*(chmbrMGAir/(chmbrMGAir+chmbrMGNvc))*dt;
         chmbrMGNvc = chmbrMGNvc + mDot*(chmbrMGNvc/(chmbrMGAir+chmbrMGNvc))*dt;
         if(chmbrMGAir < 0)
@@ -151,27 +152,64 @@ for simTime = 0:dt:150
         end
         chmbrPAir = chmbrMGAir*287.05*chmbrTG/chmbrVG;
         chmbrPNvc = chmbrMGNvc*33.25*chmbrTG/chmbrVG;
+        % Thermal effect
+        ventVel = mDot / ((chmbrMGAir+chmbrMGNvc)/chmbrVG*chmbrVentDia);
+        dT = 0.5*ventVel^2 * mDot * (1/(1.183*chmbrML));
+        dT = dT + (0.08*chmbrSAL*(chmbrTL-chmbrTG)*(1/(1.183*chmbrML)));
+        chmbrTG = chmbrTG + dT*dt;
+    end
+    %% H2O evaporation transient
+    if(tankSAL == 0)
+        tankSAL = pi*(tankVentDia/2)^2;
+    end
+    mDot = h2oEvap(0.005, 0.005, tankSAL, tankPH2o, tankTG, tankTL);
+    tankML = tankML - mDot*dt;
+    if(tankML < 0)
+        mDot = mDot - abs(tankML)/dt;
+        tankML = 0;
+    end
+    tankVG = tankVG - (tankML/tankLRho-tankVL);
+    tankVL = tankVL + (tankML/tankLRho-tankVL);
+    tankLRho = tankML/tankVL;
+    tankMGH2o = tankMGH2o + mDot*dt;
+    tankPH2o = tankMGH2o*461.52*tankTG/tankVG;
+    %% H2O thermal transient
+    if(tankML > 0)
+        dT = 10 * h2oHvap(tankTL) * -mDot * (1/(h2oCp(tankTL)*tankML));
+        dT = dT + (tankSAL*(tankTL-tankTG)*(1/(h2oCp(tankTL)*tankML)));
+        tankTL = tankTL + dT*dt;
+    else
+        tankML = 0;
+        tankTL = tankTG;
+    end
+    if(tankTL < (0+273.15))
+        simData.events.values = [simData.events.values; [simTime, "H2O liquid freezing!"]];
     end
     %% H2O vent transient
-    %{
-    if(ctrlTankVent == 0)
+    %
+    if(ctrlTankVent == 0 && tankVG ~= 0)
         if(tankSAL == 0)
             tankSAL = pi*(tankVentDia/2)^2;
         end
-        mDot = ff*mDotThruOrifice(ambientP, tankPAir+tankPH2o, (tankMGAir+tankMGH2o)/tankV, (1.4*tankMGAir+1.329*tankMGH2o)/(tankMGAir+tankMGH2o), 0.8, tankVentDia);
+        mDot = ffH2oVent*mDotThruOrifice(ambientP, tankPAir+tankPH2o, (tankMGAir+tankMGH2o)/tankVG, (1.4*tankMGAir+1.329*tankMGH2o)/(tankMGAir+tankMGH2o), 0.8, tankVentDia);
         tankMGAir = tankMGAir + mDot*(tankMGAir/(tankMGAir+tankMGH2o))*dt;
-        tankMGH2o = tankMGH2o + mDot*(tankrMGH2o/(tankMGAir+tankMGH2o))*dt;
+        tankMGH2o = tankMGH2o + mDot*(tankMGH2o/(tankMGAir+tankMGH2o))*dt;
         if(tankMGAir < 0)
             tankMGAir = 0;
         end
         if(tankMGH2o < 0)
             tankMGH2o = 0;
         end
-        tankPAir = tankMGAir*287.05*tankTG/tankV;
-        tankPH2o = tankMGH2o*461.52*tankTG/tankV;
+        tankPAir = tankMGAir*287.05*tankTG/tankVG;
+        tankPH2o = tankMGH2o*461.52*tankTG/tankVG;
+        % Thermal effect
+        ventVel = mDot / ((tankMGAir+tankMGH2o)/tankVG*tankVentDia);
+        dT = 0.5*ventVel^2 * mDot * (1/(h2oCp(tankTL)*tankML));
+        dT = dT + (0.04*tankSAL*(tankTL-tankTG)*(1/(h2oCp(tankTL)*tankML)));
+        tankTG = tankTG + dT*dt;
     end
-    %}
-    %% Simulation output
+    %
+    %% Simulation
     if livePlot
         yyaxis left
         plot(simTime, (chmbrPAir+chmbrPNvc)/1000, '.b', 'MarkerSize', 2);
@@ -184,66 +222,144 @@ for simTime = 0:dt:150
     end
     if stoData
         simData.time = [simData.time; simTime];
+        
+        simData.physics.mass.labels = ["chmbrML", "chmbrMGAir", "chmbrMGNvc", "tankML", "tankMGAir", "tankMGH2o"];
         newMRow = [chmbrML, chmbrMGAir, chmbrMGNvc, tankML, tankMGAir, tankMGH2o];
+        
+        simData.physics.pressure.labels = ["ambientP/1000", "(chmbrPNvc+chmbrPAir)/1000", "nvcVP(chmbrTL)/1000", "(tankPH2o+tankPAir)/1000", "h2oVP(tankTL)/1000"];
         newPRow = [ambientP/1000, (chmbrPNvc+chmbrPAir)/1000, nvcVP(chmbrTL)/1000, (tankPH2o+tankPAir)/1000, h2oVP(tankTL)/1000];
+       
+        simData.physics.temperature.labels = ["chmbrTG", "chmbrTL", "tankTG", "tankTL"];
         newTRow = [chmbrTG, chmbrTL, tankTG, tankTL];
+        
+        simData.physics.volume.labels = ["chmbrVG", "chmbrVL"];
         newVRow = [chmbrVG, chmbrVL];
+        
         if simTime == 0
-            if size(simData.physics.mass, 2) ~= size(newMRow, 2)
-                simData.physics.mass = zeros([0, size(newMRow, 2)]);
+            if size(simData.physics.mass.values, 2) ~= size(newMRow, 2)
+                simData.physics.mass.values = zeros([0, size(newMRow, 2)]);
             end
-            if size(simData.physics.pressure, 2) ~= size(newPRow, 2)
-                simData.physics.pressure = zeros([0, size(newPRow, 2)]);
+            if size(simData.physics.pressure.values, 2) ~= size(newPRow, 2)
+                simData.physics.pressure.values = zeros([0, size(newPRow, 2)]);
             end
-            if size(simData.physics.temperature, 2) ~= size(newTRow, 2)
-                simData.physics.temperature = zeros([0, size(newTRow, 2)]);
+            if size(simData.physics.temperature.values, 2) ~= size(newTRow, 2)
+                simData.physics.temperature.values = zeros([0, size(newTRow, 2)]);
             end
-            if size(simData.physics.volume, 2) ~= size(newVRow, 2)
-                simData.physics.volume = zeros([0, size(newVRow, 2)]);
+            if size(simData.physics.volume.values, 2) ~= size(newVRow, 2)
+                simData.physics.volume.values = zeros([0, size(newVRow, 2)]);
             end
         end
-        simData.physics.mass = [simData.physics.mass; newMRow];
-        simData.physics.pressure = [simData.physics.pressure; newPRow];
-        simData.physics.temperature = [simData.physics.temperature; newTRow];
-        simData.physics.volume = [simData.physics.volume; newVRow];
+        simData.physics.mass.values = [simData.physics.mass.values; newMRow];
+        simData.physics.pressure.values = [simData.physics.pressure.values; newPRow];
+        simData.physics.temperature.values = [simData.physics.temperature.values; newTRow];
+        simData.physics.volume.values = [simData.physics.volume.values; newVRow];
     end
     fprintf("%0.2f s\n", simTime)
     
 end
 hold off;
 
-plot(simData.time, simData.physics.pressure)
-ylim([-5 45])
+figure(1)
+plot(simData.time, simData.physics.pressure.values);
+legend(simData.physics.pressure.labels);
+ylim([-10 50])
+%{
+figure(2)
+plot(simData.time, simData.physics.temperature.values);
+legend(simData.physics.temperature.labels);
+ylim([282 300])
+figure(1)
+%}
 
 
-%Diaphragm dP characteristic
+%Diaphragm dP characteristic (backP ~ NOVEC pressure, frontP ~ applied forward pressure through diaphgram)
 function frontP = pDiaph(backP)
     frontP = backP; %perfect diaphragm assumption MUST VERIFY!!! DO NOT USE FOR FINAL
 end
 %Evaporation characteristic of H2O (surfArea in m^3, gasP in Pa, gasT in K, fluid T in K)
 function mDot = h2oEvap(sigE, sigC, surfArea, gasP, gasT, fluidT) %a positive (+) mDot signifies mass leaving liquid (evaporating)
-    mDot = surfArea * sqrt((4.1528e-25)/(2*pi*physconst('boltzmann')))*(sigE*nvcVP(fluidT)/sqrt(fluidT) - sigC*gasP/sqrt(gasT));
+    mDot = surfArea * sqrt((2.991507625e-26)/(2*pi*physconst('boltzmann')))*(sigE*h2oVP(fluidT)/sqrt(fluidT) - sigC*gasP/sqrt(gasT));
 end
 %Vapor Pressure of H2O (T in K, vp in Pa)
 function vp = h2oVP(T)
-    if(T >= 255.9 && T < 273)
+    if(T >= 255.9 && T <= 323)
         A = 4.6543;
         B = 1435.264;
         C = -64.848;
-    elseif(T >= 273 && T <= 303.5)
+    elseif(T >= 323 && T <= 298)
         A = 5.40221;
         B = 1838.675;
         C = -31.737;
-    elseif(T > 303.5 && T <= 333.5)
-        A = 5.20389;
-        B = 1733.926;
-        C = -39.485;
-    elseif(T > 333.5 && T <= 363)
-        A = 5.0768;
-        B = 1659.793;
-        C = -45.854;
+    elseif(T >= 298 && T <= 343.5)
+        A = 6.20963;
+        B = 2354.731;
+        C = 7.559;
+    elseif(T >= 343.5 && T <= 373)
+        A = 5.08354;
+        B = 1663.125;
+        C = -45.622;
+    elseif(T > 373 && T <= 573)
+        A = 3.55959;
+        B = 643.748;
+        C = -198.043;
     end
     vp = 100000 * 10^(A-(B/(T+C)));
+end
+%Enthalpy of Vaporization for H2O (T in K, H in kJ/kg)
+function H = h2oHvap(T)
+    if(T >= 273 && T <= 373.15)
+        A = 0;
+        B = 0;
+        C = 0;
+        D = -0.0000128461;
+        E = 0.0111289;
+        F = -5.58172;
+        G = 3457.04;
+    elseif(T > 373.15 && T <= 533.15)
+        A = 0;
+        B = 0;
+        C = -0.0000000760531;
+        D = 0.000109752;
+        E = -0.0636423;
+        F = 14.8365;
+        G = 1353.78;
+    elseif(T > 533.15 && T <= 647)
+        A = -0.0000000092542684094;
+        B = 0.000031738114185;
+        C = -0.045308375811;
+        D = 34.461939143;
+        E = -14729.409711;
+        F = 3354197.6281;
+        G = -317931881.15;
+    end
+    H = A*T^6 + B*T^5 + C*T^4 + D*T^3 + E*T^2 + F*T + G;
+end
+%Specific Heat for H2O (T in K, Cp in kJ/(kg K))
+function Cp = h2oCp(T)
+    if(T >= 273 && T <= 373)
+        A = -0.00000000000944814;
+        B = 0.0000000175084;
+        C = -0.0000128895;
+        D = 0.00472286;
+        E = -0.862214;
+        F = 66.9445;
+    elseif(T > 373 && T <= 553)
+        A = 0;
+        B = 0.00000000120945;
+        C = -0.00000205829;
+        D = 0.00133141;
+        E = -0.384920;
+        F = 45.9647;
+    elseif(T > 553 && T <= 633.15)
+        A = 0.0000000085726562494;
+        B = -0.000024465214647;
+        C = 0.027918109258;
+        D = -15.922976704;
+        E = 4538.9410095;
+        F = -517315.61835;
+    end
+    Cp = A*T^5 + B*T^4 + C*T^3 + D*T^2 + E*T + F;
+    
 end
 %Evaporation characteristic of NV 7100 (surfArea in m^3, gasP in Pa, gasT in K, fluid T in K)
 function mDot = nvcEvap(sigE, sigC, surfArea, gasP, gasT, fluidT) %a positive (+) mDot signifies mass leaving liquid (evaporating)
