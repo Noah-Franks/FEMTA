@@ -53,9 +53,12 @@ tankMGAir = tankPAir*tankVG/287.05/tankTG;
 tankMGH2o = tankPH2o*tankVG/461.52/tankTG;
 tankVentDia = 0.001;
 tankOutletDia = 0.003175;
-tankOutletVFlow = 0; %volumetric flow out of tank outlet
-tankOutletMFlow = 0; %mass flow out of tank outlet
+tankOutletVFlow = 0; %volumetric flow out of tank outlet (negative: out of tank)
+tankOutletMFlow = 0; %mass flow out of tank outlet (negative: out of tank)
 tankPBack = backPress(tankPH2o + tankPAir, tankOutletMFlow);
+
+dPLast = 0; %for diaphragm characteristics
+KIDiaph = 0; %for diaphragm characteristics
 
 resMG = 10;
 resT = 280;
@@ -90,11 +93,11 @@ dt = 0.03;
 ffNvcVent = 0.049;
 ffH2oVent = 0.005;
 ffH2oOutlet = 0.005;
-ffDiaph = 0.0000007;
+ffDiaph = 0.000000001;
 simData.events.values = [simData.events.values; [0, "Simulation start"]];
-for simTime = 0:dt:150
+for simTime = 0:dt:200
     %% Control transient
-    if(simTime >= 33.7 && simTime < 33.7+dt)
+    if(simTime >= 22.79 && simTime < 22.79+dt)
         
         ctrlChmbrVent = 1;
         simData.events.values = [simData.events.values; [simTime, sprintf("ctrlChmbrVent State to %d",ctrlChmbrVent)]];
@@ -107,11 +110,14 @@ for simTime = 0:dt:150
             end
         end
         %}
-    end
-    if(simTime >= 80 && simTime < 80+dt)
+    elseif(simTime >= 80 && simTime < 80+dt)
         ctrlTankVent = 1;
         simData.events.values = [simData.events.values; [simTime, sprintf("ctrlTankVent State to %d",ctrlTankVent)]];
+    elseif(simTime >= 150 && simTime < 150+dt)
+        ctrlTankRun = 0;
+        simData.events.values = [simData.events.values; [simTime, sprintf("ctrlTankRun State to %d",ctrlTankRun)]];
     end
+    
     ambientP = 1000*LVTF_ambientP(find(LVTF_ambientP(:,1) > simTime, 1, 'first'), 2);
     %% NOVEC evaporation transient
     nvcEC = 0.001625; %0.01625
@@ -136,14 +142,14 @@ for simTime = 0:dt:150
     if(chmbrML > 0)
         if(ctrlChmbrVent == 0)
             dT = 0.34 * (112) * -mDot * (1/(1.183*chmbrML));
-            dT = dT + (0.04*chmbrSAL*(chmbrTL-chmbrTG)*(1/(1.183*chmbrML)));
+            dT = dT + 10.0*(0.04*chmbrSAL*(chmbrTL-chmbrTG)*(1/(1.183*chmbrML)));
             chmbrTL = chmbrTL + dT*dt;
         else
             %
             dT = (chmbrML/0.0015)*(112/1000) * -mDot * chmbrSAL * (1/(1.183*chmbrML));
-            dT = dT - 0.5*(1*chmbrSAL*((chmbrTL)-chmbrTG)*(1/(1.183*chmbrML)));
+            dT = dT - 0.8*(1*chmbrSAL*((chmbrTL)-chmbrTG)*(1/(1.183*chmbrML)));
             chmbrTL = chmbrTL + dT*dt;
-            dT = -0.065*(1*chmbrSAL*(chmbrTG-(chmbrTL))*(1/(1.183*chmbrML)));
+            dT = -0.03*(1*chmbrSAL*(chmbrTG-(chmbrTL))*(1/(1.183*chmbrML)));
             chmbrTG = chmbrTG + dT*dt;
             %
         end
@@ -218,6 +224,7 @@ for simTime = 0:dt:150
         if(ctrlTankRun == 0)
             tankPBack = backPress(tankPAir+tankPH2o, tankOutletMFlow);
             tankOutletMFlow = ffH2oOutlet*mDotThruOrifice(tankPBack, tankPAir+tankPH2o, (tankMGAir+tankMGH2o)/tankVG, (1.4*tankMGAir+1.329*tankMGH2o)/(tankMGAir+tankMGH2o), 0.85, tankOutletDia); % slightly larger discharge coef to compensate for internal tank contour...
+            tankOutletVFlow = tankOutletMFlow/tankLRho;
             mDot = mDot + tankOutletMFlow;
         end
         if(mDot < 0)
@@ -252,7 +259,13 @@ for simTime = 0:dt:150
         if(ctrlTankVent == 0)
             mDot = ffH2oVent*mDotThruOrifice(ambientP, tankPAir+tankPH2o, tankLRho, h2oCp(tankTL)/h2oCv(tankTL), 0.8, tankVentDia);
         end
-        if(mDot < 0)
+        if(ctrlTankRun == 0)
+            tankPBack = backPress(tankPAir+tankPH2o, tankOutletMFlow)-1;
+            tankOutletMFlow = ffH2oOutlet*mDotThruOrifice(tankPBack, tankPAir+tankPH2o, (tankML)/tankVL, 1.327, 0.85, tankOutletDia); % slightly larger discharge coef to compensate for internal tank contour...
+            tankOutletVFlow = tankOutletMFlow/tankLRho;
+            mDot = mDot + tankOutletMFlow;
+        end
+        if(mDot <= 0)
             tankML = tankML + mDot*dt;
         else
             fprintf("H2O Tank sucking!\n");
@@ -274,7 +287,8 @@ for simTime = 0:dt:150
             chmbrPNvc = chmbrMGNvc*33.25*chmbrTG/chmbrVG;
             tankPAir = tankMGAir*287.05*tankTG/tankVG;
             tankPH2o = tankMGH2o*461.52*tankTG/tankVG;
-            dV = ffDiaph*vDiaph((chmbrPAir+chmbrPNvc)-(tankPAir+tankPH2o));
+            dV = vDiaph((chmbrPAir+chmbrPNvc)-(tankPAir+tankPH2o), dPLast, KIDiaph, dt, 0.0001, 0.9, 0.02, ffDiaph);
+            dPLast = (chmbrPAir+chmbrPNvc)-(tankPAir+tankPH2o);
         else
             tankPAir = chmbrPAir;
             tankPH2o = chmbrPNvc;
@@ -354,6 +368,10 @@ hold off;
 figure(1)
 plot(simData.time, simData.physics.pressure.values);
 legend(simData.physics.pressure.labels);
+hold on;
+load('chamberPExp.mat');
+plot(chamberPExp(:,1), chamberPExp(:,2));
+hold off;
 ylim([-10 50])
 %
 figure(2)
@@ -375,8 +393,9 @@ function tankPBack = backPress(tankPTotal, mDot)
     tankPBack = tankPTotal; %assume NO PRESSURE DROP! (only force is diaphragm pushing on water)
 end
 %Diaphragm dV characteristic (volume defined as internal "bulb" volume, negative value indicates diaphragm has flipped "inside-out"
-function dV = vDiaph(dP) % (dp ~ Pa, dV ~ m^3/s)
-    dV = (1.0e-6)*dP; %diaphragm characteristics assumed MUST VERIFY!!! DO NOT USE FOR FINAL
+function dV = vDiaph(dP, dPLast, KIDiaph, dt, KP, KI, KD, ff) % (dp ~ Pa, dV ~ m^3/s)
+    KIDiaph = KIDiaph + KI*(dP*dt);
+    dV = ff * (KP*dP + KIDiaph - KD*(dP-dPLast)/dt);
 end
 %Evaporation characteristic of H2O (surfArea in m^3, gasP in Pa, gasT in K, fluid T in K)
 function mDot = h2oEvap(sigE, sigC, surfArea, gasP, gasT, fluidT) %a positive (+) mDot signifies mass leaving liquid (evaporating)
